@@ -21,20 +21,30 @@ import {
 export function ScreenHome() {
   return (
     <PFScreen bg={PF.bgAlt}>
-      <PFHeader
-        large
-        title="Hi, Anna"
-        trailing={
-          <>
-            <PFHeaderIcon ariaLabel="Search">
-              <Icon name="search" size={22} color={PF.fg2} />
-            </PFHeaderIcon>
-            <PFHeaderIcon ariaLabel="Notifications" hasBadge>
-              <Icon name="bell" size={22} color={PF.fg2} />
-            </PFHeaderIcon>
-          </>
-        }
-      />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "12px 16px 4px",
+        }}
+      >
+        <img
+          src="/brand/postfinance-logo.svg"
+          alt="PostFinance"
+          height={28}
+          style={{ display: "block" }}
+        />
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <PFHeaderIcon ariaLabel="Search">
+            <Icon name="search" size={22} color={PF.fg2} />
+          </PFHeaderIcon>
+          <PFHeaderIcon ariaLabel="Notifications" hasBadge>
+            <Icon name="bell" size={22} color={PF.fg2} />
+          </PFHeaderIcon>
+        </div>
+      </div>
+      <PFHeader large title="Hi, Anna" />
 
       <PFAccountCard
         label="Private account"
