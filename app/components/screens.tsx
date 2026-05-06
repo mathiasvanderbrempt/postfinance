@@ -377,7 +377,7 @@ export function ScreenInvest() {
                   width: 56,
                   height: 56,
                   borderRadius: 999,
-                  background: t.accent ? PF.gelb : PF.white,
+                  background: t.accent ? PF.gelb : PF.petrol1,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
