@@ -434,7 +434,7 @@ export function PFCardList({ children }: { children: React.ReactNode }) {
         margin: "0 16px",
         background: PF.white,
         borderRadius: 16,
-        border: `1px solid ${PF.divider}`,
+        boxShadow: "0 1px 0 rgba(0, 75, 90, 0.06)",
         overflow: "hidden",
       }}
     >

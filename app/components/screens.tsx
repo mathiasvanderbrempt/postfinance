@@ -65,7 +65,7 @@ export function ScreenHome() {
             background: PF.white,
             borderRadius: 16,
             padding: 16,
-            border: `1px solid ${PF.divider}`,
+            boxShadow: "0 1px 0 rgba(0, 75, 90, 0.06)",
             display: "flex",
             alignItems: "center",
             gap: 14,
@@ -409,7 +409,7 @@ export function ScreenInvest() {
               background: PF.white,
               borderRadius: 20,
               padding: 18,
-              border: `1px solid ${PF.divider}`,
+              boxShadow: "0 1px 0 rgba(0, 75, 90, 0.06)",
             }}
           >
             <div
