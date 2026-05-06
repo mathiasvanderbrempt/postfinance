@@ -14,7 +14,7 @@ export const PF = {
   gelbDark: "#E6B800",
   white: "#FFFFFF",
   bg: "#FFFFFF",
-  bgAlt: "#E6EEF0",
+  bgAlt: "#F0F5F6",
   /* Foreground tokens are now petrol-family per the latest design update */
   fg1: "#002B33", // petrol-11 — primary
   fg2: "#004B5A", // petrol-9  — secondary
