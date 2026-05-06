@@ -8,6 +8,7 @@ import {
   ScreenPay,
   ScreenServices,
 } from "./components/screens";
+import DesignSystem from "./components/system/DesignSystem";
 import { PF } from "./lib/pf";
 
 export default function Page() {
@@ -124,58 +125,8 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Token strip */}
-      <footer
-        style={{
-          maxWidth: 1280,
-          margin: "0 auto",
-          padding: "0 40px 96px",
-        }}
-      >
-        <div
-          style={{
-            background: PF.white,
-            borderRadius: 24,
-            padding: 32,
-            boxShadow: "var(--pf-shadow-md)",
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 24,
-          }}
-        >
-          {[
-            { name: "Petrol 9", hex: "#004B5A", role: "Brand spine", fg: PF.white, bg: PF.petrol9 },
-            { name: "Petrol 11", hex: "#002B33", role: "Deepest surface", fg: PF.white, bg: PF.petrol11 },
-            { name: "Petrol 1", hex: "#E6EEF0", role: "Tinted background", fg: PF.petrol9, bg: PF.petrol1 },
-            { name: "Gelb", hex: "#FFCC00", role: "Accent only", fg: PF.petrol11, bg: PF.gelb },
-            { name: "Grau 1", hex: "#F8F8F8", role: "Section background", fg: PF.fg1, bg: "#F8F8F8" },
-            { name: "Grau 8", hex: "#1A1A1A", role: "Primary text", fg: PF.white, bg: "#1A1A1A" },
-          ].map((t) => (
-            <div
-              key={t.name}
-              style={{
-                background: t.bg,
-                color: t.fg,
-                borderRadius: 16,
-                padding: 18,
-                minHeight: 96,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                border: t.bg === "#F8F8F8" || t.bg === PF.petrol1 ? "1px solid #E6EAEA" : "none",
-              }}
-            >
-              <div style={{ fontSize: 14, fontWeight: 700 }}>{t.name}</div>
-              <div>
-                <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, opacity: 0.75 }}>
-                  {t.hex}
-                </div>
-                <div style={{ fontSize: 12, fontWeight: 300, opacity: 0.85 }}>{t.role}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </footer>
+      {/* Full design system documentation */}
+      <DesignSystem />
     </main>
   );
 }

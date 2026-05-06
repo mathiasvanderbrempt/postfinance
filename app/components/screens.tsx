@@ -21,30 +21,20 @@ import {
 export function ScreenHome() {
   return (
     <PFScreen bg={PF.bgAlt}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "12px 16px 4px",
-        }}
-      >
-        <img
-          src="/brand/postfinance-logo.svg"
-          alt="PostFinance"
-          height={28}
-          style={{ display: "block" }}
-        />
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <PFHeaderIcon ariaLabel="Search">
-            <Icon name="search" size={22} color={PF.fg2} />
-          </PFHeaderIcon>
-          <PFHeaderIcon ariaLabel="Notifications" hasBadge>
-            <Icon name="bell" size={22} color={PF.fg2} />
-          </PFHeaderIcon>
-        </div>
-      </div>
-      <PFHeader large title="Hi, Anna" />
+      <PFHeader
+        large
+        title="Hi, Anna"
+        trailing={
+          <>
+            <PFHeaderIcon ariaLabel="Search">
+              <Icon name="search" size={22} color={PF.fg2} />
+            </PFHeaderIcon>
+            <PFHeaderIcon ariaLabel="Notifications" hasBadge>
+              <Icon name="bell" size={22} color={PF.fg2} />
+            </PFHeaderIcon>
+          </>
+        }
+      />
 
       <PFAccountCard
         label="Private account"
@@ -756,14 +746,11 @@ export function ScreenLogin() {
     >
       <div>
         <img
-          src="/brand/postfinance-mark.svg"
-          width={56}
-          height={56}
+          src="/brand/postfinance-logo-white.svg"
+          height={28}
           alt="PostFinance"
           style={{
             display: "block",
-            borderRadius: 14,
-            boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
           }}
         />
         <div
@@ -771,7 +758,7 @@ export function ScreenLogin() {
             fontSize: 36,
             fontWeight: 700,
             letterSpacing: "-0.01em",
-            marginTop: 32,
+            marginTop: 40,
             lineHeight: 1.1,
           }}
         >
