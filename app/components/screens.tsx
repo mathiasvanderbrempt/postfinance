@@ -746,7 +746,7 @@ export function ScreenLogin() {
     >
       <div>
         <img
-          src="/brand/postfinance-logo-white.svg"
+          src="/brand/postfinance-logo-gelb.svg"
           height={28}
           alt="PostFinance"
           style={{
