@@ -20,7 +20,7 @@ export const PF = {
   fg2: "#004B5A", // petrol-9  — secondary
   fg3: "#2A6470", // petrol-6  — tertiary / meta
   fg4: "#6F95A0", // petrol-4  — placeholder / disabled
-  divider: "#DEDEDE",
+  divider: "#D6E2E5",
   green: "#1E7A48",
   red: "#B3261E",
   info: "#1F5E85",
