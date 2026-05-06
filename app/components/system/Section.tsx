@@ -17,6 +17,7 @@ export function Section({
   return (
     <section
       id={id}
+      className="pf-section"
       style={{
         maxWidth: 1280,
         margin: "0 auto",
@@ -38,7 +39,7 @@ export function Section({
         <h2
           style={{
             margin: "10px 0 0",
-            fontSize: 40,
+            fontSize: "clamp(28px, 6vw, 40px)",
             fontWeight: 700,
             letterSpacing: "-0.02em",
             color: PF.petrol11,
@@ -166,11 +167,8 @@ export function Grid({
 }) {
   return (
     <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-        gap,
-      }}
+      className={`pf-grid pf-grid-${cols}`}
+      style={{ gap }}
     >
       {children}
     </div>

@@ -56,7 +56,7 @@ function DSHeader() {
         position: "relative",
         overflow: "hidden",
       }}
-      className="pf-petrol-card"
+      className="pf-petrol-card pf-ds-header"
     >
       <div style={{ maxWidth: 1280, margin: "0 auto", position: "relative" }}>
         <div
@@ -390,7 +390,7 @@ function ColorSection() {
           </>
         }
       >
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(11, 1fr)", gap: 6, width: "100%" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(46px, 1fr))", gap: 6, width: "100%" }}>
           {petrol.map((s) => (
             <div key={s.step} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
               <div
@@ -480,7 +480,7 @@ function ColorSection() {
         title="Semantic pairs"
         description="Each ships as a (-bg, -fg) duo, tuned for inline status messages, badges, and toasts."
       >
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, width: "100%" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, width: "100%" }}>
           {semantic.map((s) => (
             <div
               key={s.name}
@@ -936,7 +936,7 @@ function IconographySection() {
             </>
           }
         >
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 12, width: "100%" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(56px, 1fr))", gap: 12, width: "100%" }}>
             {sys.map((n) => (
               <div key={n} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                 <div
@@ -968,7 +968,7 @@ function IconographySection() {
             </>
           }
         >
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, width: "100%" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: 16, width: "100%" }}>
             {composite.map((c) => (
               <div key={c.name} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, textAlign: "center" }}>
                 <div

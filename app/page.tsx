@@ -16,6 +16,7 @@ export default function Page() {
     <main style={{ minHeight: "100vh", background: "var(--pf-bg-canvas)" }}>
       {/* Canvas header */}
       <header
+        className="pf-canvas-header"
         style={{
           maxWidth: 1280,
           margin: "0 auto",
@@ -94,7 +95,7 @@ export default function Page() {
 
       {/* Phones row */}
       <section
-        className="pf-canvas-scroll"
+        className="pf-canvas-scroll pf-canvas-row"
         style={{
           padding: "32px 40px 96px",
           overflowX: "auto",
