@@ -11,7 +11,7 @@ export const PF = {
   gelbDark: "#E6B800",
   white: "#FFFFFF",
   bg: "#FFFFFF",
-  bgAlt: "#EDF1F2",
+  bgAlt: "#F8F8F8",
   fg1: "#1A1A1A",
   fg2: "#4A4A4A",
   fg3: "#6E6E6E",
