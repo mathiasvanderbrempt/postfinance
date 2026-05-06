@@ -251,6 +251,7 @@ export function ScreenInvest() {
       />
 
       <div
+        className="pf-petrol-card"
         style={{
           margin: "0 20px",
           background: PF.petrol9,
@@ -262,7 +263,6 @@ export function ScreenInvest() {
           overflow: "hidden",
         }}
       >
-        <div className="pf-sheen" />
         <div
           style={{
             fontSize: 11,
@@ -270,7 +270,6 @@ export function ScreenInvest() {
             letterSpacing: ".04em",
             textTransform: "uppercase",
             opacity: 0.7,
-            position: "relative",
           }}
         >
           Portfolio total
@@ -281,7 +280,6 @@ export function ScreenInvest() {
             alignItems: "baseline",
             gap: 6,
             marginTop: 6,
-            position: "relative",
           }}
         >
           <span style={{ fontSize: 13, opacity: 0.7 }}>CHF</span>
@@ -301,7 +299,6 @@ export function ScreenInvest() {
             gap: 14,
             marginTop: 8,
             fontSize: 13,
-            position: "relative",
           }}
         >
           <span style={{ color: PF.gelb, fontWeight: 700 }}>+ 624.30</span>
@@ -314,7 +311,6 @@ export function ScreenInvest() {
             height: 56,
             alignItems: "flex-end",
             gap: 4,
-            position: "relative",
           }}
         >
           {[28, 32, 30, 38, 36, 42, 40, 46, 44, 52, 50, 58, 56, 64, 60, 68].map(
@@ -420,6 +416,7 @@ export function ScreenOffers() {
         {offers.map((o, i) => (
           <div
             key={i}
+            className={o.dark ? "pf-petrol-card" : undefined}
             style={{
               background: o.dark ? PF.petrol9 : PF.white,
               color: o.dark ? PF.white : PF.fg1,
@@ -433,7 +430,6 @@ export function ScreenOffers() {
               overflow: "hidden",
             }}
           >
-            {o.dark && <div className="pf-sheen" />}
             <div
               style={{
                 fontSize: 11,
@@ -442,7 +438,6 @@ export function ScreenOffers() {
                 textTransform: "uppercase",
                 color: o.dark ? PF.gelb : PF.petrol7,
                 opacity: o.dark ? 0.95 : 0.65,
-                position: "relative",
               }}
             >
               {o.tag}
@@ -453,7 +448,6 @@ export function ScreenOffers() {
                 fontWeight: 700,
                 marginTop: 6,
                 lineHeight: 1.25,
-                position: "relative",
               }}
             >
               {o.title}
@@ -470,7 +464,6 @@ export function ScreenOffers() {
                 fontWeight: 300,
                 marginTop: 4,
                 opacity: 0.75,
-                position: "relative",
               }}
             >
               {o.sub}
@@ -508,6 +501,7 @@ export function ScreenServices() {
 export function ScreenLogin() {
   return (
     <div
+      className="pf-petrol-card"
       style={{
         flex: 1,
         background: PF.petrol9,
@@ -521,8 +515,7 @@ export function ScreenLogin() {
         overflow: "hidden",
       }}
     >
-      <div className="pf-sheen" />
-      <div style={{ position: "relative" }}>
+      <div>
         {/* PostFinance signet on gelb square */}
         <div
           style={{

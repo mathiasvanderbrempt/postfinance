@@ -112,6 +112,7 @@ export function PFAccountCard({
 }) {
   return (
     <div
+      className="pf-petrol-card"
       style={{
         background: PF.petrol9,
         color: PF.white,
@@ -126,13 +127,11 @@ export function PFAccountCard({
         overflow: "hidden",
       }}
     >
-      <div className="pf-sheen" />
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          position: "relative",
         }}
       >
         <div>
@@ -165,7 +164,6 @@ export function PFAccountCard({
           display: "flex",
           alignItems: "baseline",
           gap: 6,
-          position: "relative",
         }}
       >
         <span style={{ fontSize: 13, fontWeight: 300, opacity: 0.7 }}>
