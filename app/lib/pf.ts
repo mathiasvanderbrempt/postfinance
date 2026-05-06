@@ -1,7 +1,10 @@
 export const PF = {
   petrol1: "#E6EEF0",
   petrol2: "#C2D4D8",
+  petrol3: "#99B5BC",
+  petrol4: "#6F95A0",
   petrol5: "#4A7984",
+  petrol6: "#2A6470",
   petrol7: "#15555F",
   petrol8: "#074E58",
   petrol9: "#004B5A",
@@ -12,13 +15,15 @@ export const PF = {
   white: "#FFFFFF",
   bg: "#FFFFFF",
   bgAlt: "#E6EEF0",
-  fg1: "#1A1A1A",
-  fg2: "#4A4A4A",
-  fg3: "#6E6E6E",
-  fg4: "#9A9A9A",
-  divider: "#EDEDED",
+  /* Foreground tokens are now petrol-family per the latest design update */
+  fg1: "#002B33", // petrol-11 — primary
+  fg2: "#004B5A", // petrol-9  — secondary
+  fg3: "#2A6470", // petrol-6  — tertiary / meta
+  fg4: "#6F95A0", // petrol-4  — placeholder / disabled
+  divider: "#DEDEDE",
   green: "#1E7A48",
   red: "#B3261E",
+  info: "#1F5E85",
 } as const;
 
 export const pfFont =

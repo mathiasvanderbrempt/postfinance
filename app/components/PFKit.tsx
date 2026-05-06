@@ -72,9 +72,9 @@ export function PFHeader({
   return (
     <div
       style={{
-        padding: large ? "8px 20px 16px" : "10px 20px 12px",
+        padding: large ? "8px 16px 16px" : "10px 16px 12px",
         display: "flex",
-        alignItems: large ? "flex-end" : "center",
+        alignItems: "center",
         justifyContent: "space-between",
         minHeight: large ? 96 : 52,
         background: "transparent",
@@ -84,6 +84,7 @@ export function PFHeader({
         style={{
           fontFamily: pfFont,
           fontWeight: 700,
+          lineHeight: 1,
           fontSize: large ? 32 : 18,
           color: PF.fg1,
           letterSpacing: "-0.01em",
@@ -91,10 +92,56 @@ export function PFHeader({
       >
         {title}
       </span>
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
         {trailing}
       </div>
     </div>
+  );
+}
+
+/* ─── Header icon button (40×40 hit-target) ───────────────────────── */
+export function PFHeaderIcon({
+  ariaLabel,
+  children,
+  hasBadge,
+}: {
+  ariaLabel: string;
+  children: React.ReactNode;
+  hasBadge?: boolean;
+}) {
+  return (
+    <button
+      aria-label={ariaLabel}
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 999,
+        border: "none",
+        background: "transparent",
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        padding: 0,
+      }}
+    >
+      {children}
+      {hasBadge && (
+        <span
+          style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            background: PF.gelb,
+            border: `1.5px solid ${PF.bgAlt}`,
+          }}
+        />
+      )}
+    </button>
   );
 }
 
@@ -117,14 +164,14 @@ export function PFAccountCard({
         background: PF.petrol9,
         color: PF.white,
         borderRadius: 20,
-        padding: 20,
+        padding: "24px 22px 26px",
         margin: "0 20px",
-        minHeight: 184,
-        boxShadow: "var(--pf-shadow-petrol)",
+        minHeight: 180,
+        boxShadow: "0 8px 20px rgba(0,75,90,0.10)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        gap: 16,
+        gap: 28,
         position: "relative",
         overflow: "hidden",
       }}
@@ -253,6 +300,7 @@ export function PFTxRow({
   amount,
   sign = "−",
   currency = "CHF",
+  last,
 }: {
   icon: string;
   name: string;
@@ -260,6 +308,7 @@ export function PFTxRow({
   amount: string;
   sign?: "+" | "−";
   currency?: string;
+  last?: boolean;
 }) {
   const positive = sign === "+";
   return (
@@ -268,15 +317,15 @@ export function PFTxRow({
         display: "flex",
         alignItems: "center",
         gap: 14,
-        padding: "14px 20px",
-        borderBottom: `1px solid ${PF.divider}`,
+        padding: "14px 16px",
+        borderBottom: last ? "none" : `1px solid ${PF.divider}`,
       }}
     >
       <div
         style={{
           width: 40,
           height: 40,
-          borderRadius: 999,
+          borderRadius: 12,
           background: PF.petrol1,
           flex: "0 0 auto",
           display: "flex",
@@ -375,15 +424,43 @@ export function PFSectionHead({
   );
 }
 
+/* ─── Card-list wrapper — single rounded card, internal dividers ─── */
+export function PFCardList({ children }: { children: React.ReactNode }) {
+  const items = React.Children.toArray(children);
+  const last = items.length - 1;
+  return (
+    <div
+      style={{
+        margin: "0 16px",
+        background: PF.white,
+        borderRadius: 16,
+        border: `1px solid ${PF.divider}`,
+        overflow: "hidden",
+      }}
+    >
+      {items.map((c, i) =>
+        React.isValidElement(c)
+          ? React.cloneElement(
+              c as React.ReactElement<{ last?: boolean }>,
+              { last: i === last, key: i },
+            )
+          : c,
+      )}
+    </div>
+  );
+}
+
 /* ─── List Row (settings-style) ──────────────────────────────────── */
 export function PFListRow({
   icon,
   label,
   meta,
+  last,
 }: {
   icon: string;
   label: string;
   meta?: string;
+  last?: boolean;
 }) {
   return (
     <div
@@ -391,8 +468,8 @@ export function PFListRow({
         display: "flex",
         alignItems: "center",
         gap: 14,
-        padding: "16px 20px",
-        borderBottom: `1px solid ${PF.divider}`,
+        padding: 16,
+        borderBottom: last ? "none" : `1px solid ${PF.divider}`,
         background: PF.white,
       }}
     >

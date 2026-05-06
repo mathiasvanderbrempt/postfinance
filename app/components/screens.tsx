@@ -2,11 +2,14 @@
 
 import * as React from "react";
 import Icon from "./Icon";
+import IconAccent from "./IconAccent";
 import { PF, pfFont } from "../lib/pf";
 import {
   PFAccountCard,
   PFButton,
+  PFCardList,
   PFHeader,
+  PFHeaderIcon,
   PFListRow,
   PFQuickActions,
   PFScreen,
@@ -23,28 +26,19 @@ export function ScreenHome() {
         title="Hi, Anna"
         trailing={
           <>
-            <Icon name="search" size={22} color={PF.fg2} />
-            <div style={{ position: "relative" }}>
+            <PFHeaderIcon ariaLabel="Search">
+              <Icon name="search" size={22} color={PF.fg2} />
+            </PFHeaderIcon>
+            <PFHeaderIcon ariaLabel="Notifications" hasBadge>
               <Icon name="bell" size={22} color={PF.fg2} />
-              <div
-                style={{
-                  position: "absolute",
-                  top: -2,
-                  right: -2,
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  background: PF.gelb,
-                  border: `1.5px solid ${PF.white}`,
-                }}
-              />
-            </div>
+            </PFHeaderIcon>
           </>
         }
       />
+
       <PFAccountCard
         label="Private account"
-        accountNo="CH56 0900 ··· 5325 7"
+        accountNo="···· 5325 7"
         balance="4 218.50"
       />
 
@@ -58,36 +52,20 @@ export function ScreenHome() {
       />
 
       <PFSectionHead title="Recent activity" action="See all" />
-      <div style={{ background: PF.white }}>
+      <PFCardList>
         <PFTxRow icon="cart" name="Migros" meta="Today · 14:32 · *5410" amount="89.40" />
-        <PFTxRow
-          icon="coffee"
-          name="Starbucks Bahnhof"
-          meta="Today · 09:15 · *5410"
-          amount="6.80"
-        />
-        <PFTxRow
-          icon="send"
-          name="Marco Bianchi"
-          meta="Yesterday · TWINT"
-          amount="120.00"
-          sign="+"
-        />
-        <PFTxRow
-          icon="house"
-          name="Rent · April"
-          meta="1 Apr · standing order"
-          amount="1 850.00"
-        />
-      </div>
+        <PFTxRow icon="coffee" name="Starbucks Bahnhof" meta="Today · 09:15 · *5410" amount="6.80" />
+        <PFTxRow icon="send" name="Marco Bianchi" meta="Yesterday · TWINT" amount="120.00" sign="+" />
+        <PFTxRow icon="house" name="Rent · April" meta="1 Apr · standing order" amount="1 850.00" />
+      </PFCardList>
 
-      <div style={{ padding: 20 }}>
+      <div style={{ padding: 16 }}>
         <div
           style={{
             background: PF.white,
-            borderRadius: 20,
-            padding: 18,
-            border: "1px solid #E6EAEA",
+            borderRadius: 16,
+            padding: 16,
+            border: `1px solid ${PF.divider}`,
             display: "flex",
             alignItems: "center",
             gap: 14,
@@ -95,8 +73,8 @@ export function ScreenHome() {
         >
           <div
             style={{
-              width: 44,
-              height: 44,
+              width: 48,
+              height: 48,
               borderRadius: 12,
               flex: "0 0 auto",
               background: PF.petrol1,
@@ -105,7 +83,7 @@ export function ScreenHome() {
               justifyContent: "center",
             }}
           >
-            <Icon name="trending-up" size={22} color={PF.petrol9} />
+            <IconAccent name="insight" size={32} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
@@ -162,8 +140,8 @@ function tile(
     alignItems: "flex-start",
     fontFamily: pfFont,
     boxShadow: petrol
-      ? "0 20px 40px rgba(0,75,90,.12)"
-      : "0 20px 40px rgba(0,0,0,.04)",
+      ? "0 8px 20px rgba(0,75,90,.10)"
+      : "0 1px 0 rgba(0,75,90,0.04)",
   };
 }
 const tileTitle = (c: string): React.CSSProperties => ({
@@ -184,18 +162,22 @@ export function ScreenPay() {
       <PFHeader
         large
         title="Payments"
-        trailing={<Icon name="search" size={22} color={PF.fg2} />}
+        trailing={
+          <PFHeaderIcon ariaLabel="Search">
+            <Icon name="search" size={22} color={PF.fg2} />
+          </PFHeaderIcon>
+        }
       />
 
       <div
         style={{
-          padding: "0 20px",
+          padding: "0 16px",
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           gap: 12,
         }}
       >
-        <button style={tile(PF.petrol9, PF.white, true)}>
+        <button className="pf-petrol-card" style={{ ...tile(PF.petrol9, PF.white, true), position: "relative", overflow: "hidden" }}>
           <Icon name="qr" size={28} color={PF.gelb} />
           <span style={tileTitle(PF.white)}>Scan QR-bill</span>
           <span style={tileSub("rgba(255,255,255,.7)")}>
@@ -220,7 +202,7 @@ export function ScreenPay() {
       </div>
 
       <PFSectionHead title="Pending" action="See all" />
-      <div style={{ background: PF.white }}>
+      <PFCardList>
         <PFTxRow
           icon="house"
           name="Krankenkasse · Helsana"
@@ -233,7 +215,7 @@ export function ScreenPay() {
           meta="Due 12 Apr · QR-bill"
           amount="89.50"
         />
-      </div>
+      </PFCardList>
 
       <div style={{ height: 12 }} />
     </PFScreen>
@@ -241,126 +223,354 @@ export function ScreenPay() {
 }
 
 /* ─── INVEST ──────────────────────────────────────────────────────── */
+type InvestTab = { id: string; icon: string; label: string; accent?: boolean };
+type Holding = { name: string; tag: string; amount: string; change: string };
+type Portfolio = {
+  title: string;
+  total?: string;
+  details?: boolean;
+  items: Holding[];
+};
+
 export function ScreenInvest() {
+  const tabs: InvestTab[] = [
+    { id: "discover", icon: "trending-up", label: "Discover", accent: true },
+    { id: "market", icon: "tag", label: "Market overview" },
+    { id: "consult", icon: "card", label: "Consultation" },
+  ];
+  const portfolios: Portfolio[] = [
+    {
+      title: "Fund self-service",
+      total: "1'770.11+",
+      details: true,
+      items: [
+        {
+          name: "UBS (CH) Institutional Fund",
+          tag: "Active fund savings plan",
+          amount: "1'330.00+",
+          change: "+12.50%",
+        },
+        {
+          name: "Pictet Short-Term Money Market JPY",
+          tag: "Active fund savings plan",
+          amount: "440.11+",
+          change: "+12.50%",
+        },
+      ],
+    },
+    {
+      title: "Investment consulting plus",
+      details: true,
+      items: [
+        {
+          name: "99-999999-5",
+          tag: "Balance, Global",
+          amount: "4'000.11+",
+          change: "+12.50%",
+        },
+      ],
+    },
+    {
+      title: "E-trading",
+      total: "12'480.50+",
+      details: true,
+      items: [
+        {
+          name: "Nestlé SA",
+          tag: "Self-managed · 48 shares",
+          amount: "4'627.20+",
+          change: "+3.20%",
+        },
+        {
+          name: "Roche Holding",
+          tag: "Self-managed · 22 shares",
+          amount: "5'458.20+",
+          change: "+1.80%",
+        },
+        {
+          name: "Swiss Market Index ETF",
+          tag: "Self-managed · 18 units",
+          amount: "2'395.10+",
+          change: "+0.95%",
+        },
+      ],
+    },
+  ];
+
   return (
     <PFScreen bg={PF.bgAlt}>
-      <PFHeader
-        large
-        title="Invest"
-        trailing={<Icon name="settings" size={22} color={PF.fg2} />}
-      />
-
+      <div style={{ height: 12 }} />
+      {/* HERO — petrol card with shine, search button, balance, 3 tabs */}
       <div
         className="pf-petrol-card"
         style={{
-          margin: "0 20px",
+          margin: "0 16px",
           background: PF.petrol9,
           color: PF.white,
-          borderRadius: 20,
-          padding: 20,
-          boxShadow: "var(--pf-shadow-petrol)",
+          borderRadius: 24,
+          padding: "20px 22px 24px",
+          boxShadow: "0 8px 20px rgba(0,75,90,0.10)",
           position: "relative",
           overflow: "hidden",
         }}
       >
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: ".04em",
-            textTransform: "uppercase",
-            opacity: 0.7,
-          }}
-        >
-          Portfolio total
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            gap: 6,
-            marginTop: 6,
-          }}
-        >
-          <span style={{ fontSize: 13, opacity: 0.7 }}>CHF</span>
-          <span
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button
             style={{
-              fontSize: 36,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "rgba(255,255,255,.12)",
+              border: "none",
+              borderRadius: 999,
+              color: PF.white,
+              padding: "8px 14px",
+              fontFamily: pfFont,
               fontWeight: 700,
-              letterSpacing: "-0.01em",
+              fontSize: 13,
+              cursor: "pointer",
             }}
           >
-            28 540.20
-          </span>
+            <Icon name="search" size={16} color={PF.white} /> Search
+          </button>
+        </div>
+        <div style={{ textAlign: "center", marginTop: 8 }}>
+          <div style={{ fontSize: 14, fontWeight: 300, opacity: 0.85 }}>
+            Investment and Retirement
+          </div>
+          <div
+            style={{
+              fontSize: 30,
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+              marginTop: 4,
+            }}
+          >
+            CHF 595&apos;389.49+
+          </div>
         </div>
         <div
           style={{
             display: "flex",
-            gap: 14,
-            marginTop: 8,
-            fontSize: 13,
+            justifyContent: "space-around",
+            marginTop: 22,
           }}
         >
-          <span style={{ color: PF.gelb, fontWeight: 700 }}>+ 624.30</span>
-          <span style={{ opacity: 0.7 }}>+ 2.23% · 1M</span>
-        </div>
-        <div
-          style={{
-            marginTop: 18,
-            display: "flex",
-            height: 56,
-            alignItems: "flex-end",
-            gap: 4,
-          }}
-        >
-          {[28, 32, 30, 38, 36, 42, 40, 46, 44, 52, 50, 58, 56, 64, 60, 68].map(
-            (h, i) => (
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 8,
+                padding: 0,
+                fontFamily: pfFont,
+                color: PF.white,
+              }}
+            >
               <div
-                key={i}
                 style={{
-                  flex: 1,
-                  height: `${h}%`,
-                  background: i > 12 ? PF.gelb : "rgba(255,255,255,.35)",
-                  borderRadius: 3,
+                  width: 56,
+                  height: 56,
+                  borderRadius: 999,
+                  background: t.accent ? PF.gelb : PF.white,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
-              />
-            ),
-          )}
+              >
+                <Icon name={t.icon} size={24} color={PF.petrol9} stroke={1.8} />
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700 }}>{t.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      <PFSectionHead title="Holdings" action="View all" />
-      <div style={{ background: PF.white }}>
-        <PFTxRow
-          icon="trending-up"
-          name="Nestlé"
-          meta="48 shares · CHF 96.40"
-          amount="4 627.20"
-          sign="+"
-        />
-        <PFTxRow
-          icon="trending-up"
-          name="Roche"
-          meta="22 shares · CHF 248.10"
-          amount="5 458.20"
-          sign="+"
-        />
-        <PFTxRow
-          icon="trending-up"
-          name="Swiss Index ETF"
-          meta="120 units · CHF 142.50"
-          amount="17 100.00"
-          sign="+"
-        />
+      <div style={{ height: 16 }} />
+
+      {/* Portfolio cards */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+          padding: "0 16px",
+        }}
+      >
+        {portfolios.map((p, pi) => (
+          <div
+            key={pi}
+            style={{
+              background: PF.white,
+              borderRadius: 20,
+              padding: 18,
+              border: `1px solid ${PF.divider}`,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: PF.fg1,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {p.title}
+                </div>
+                {p.total && (
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 300,
+                      color: PF.fg2,
+                      marginTop: 2,
+                    }}
+                  >
+                    CHF {p.total}
+                  </div>
+                )}
+              </div>
+              {p.details && (
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: PF.petrol9,
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                  }}
+                >
+                  Details
+                </span>
+              )}
+            </div>
+            <div
+              style={{
+                marginTop: 14,
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
+              {p.items.map((it, ii) => (
+                <div
+                  key={ii}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 999,
+                      background: PF.petrol1,
+                      flex: "0 0 auto",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke={PF.petrol9}
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="6" cy="14" r="2.2" />
+                      <circle cx="18" cy="14" r="2.2" />
+                      <circle cx="12" cy="6" r="2.2" />
+                      <path d="M7.7 13 10.5 7.5 M16.3 13 13.5 7.5" />
+                      <rect
+                        x="3"
+                        y="3"
+                        width="6"
+                        height="4"
+                        rx="1"
+                        fill={PF.gelb}
+                        stroke={PF.petrol9}
+                      />
+                      <path d="m4.2 4.2 2 2 M6.2 4.2l-2 2" />
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: PF.fg1,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {it.name}
+                    </div>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        marginTop: 6,
+                        padding: "4px 10px",
+                        borderRadius: 999,
+                        background: PF.petrol1,
+                        color: PF.petrol9,
+                        fontSize: 11,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {it.tag}
+                    </span>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: PF.fg1,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      CHF {it.amount}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: PF.info,
+                        marginTop: 2,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <span style={{ fontSize: 10 }}>▲</span> {it.change}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div style={{ padding: 20 }}>
-        <PFButton kind="primary" fullWidth leadingIcon="plus">
-          Buy / sell
-        </PFButton>
-      </div>
-
-      <div style={{ height: 12 }} />
+      <div style={{ height: 20 }} />
     </PFScreen>
   );
 }
@@ -371,7 +581,7 @@ type Offer = {
   title: string;
   highlight?: string;
   sub: string;
-  dark?: boolean;
+  kind: "hero" | "mid";
 };
 
 export function ScreenOffers() {
@@ -381,24 +591,26 @@ export function ScreenOffers() {
       title: "Open a savings account",
       highlight: "1.25%",
       sub: "Switch in under 5 minutes",
-      dark: true,
+      kind: "hero",
     },
     {
       tag: "Cashback",
       title: "Migros · 5% back this weekend",
       sub: "Use your PostFinance card",
+      kind: "mid",
     },
     {
       tag: "Travel",
       title: "No fees on EUR purchases",
       sub: "Until 30 June",
+      kind: "mid",
     },
     {
       tag: "Mortgage",
       title: "Rate check in 2 minutes",
       highlight: "0.94%",
       sub: "No credit pull required",
-      dark: true,
+      kind: "mid",
     },
   ];
 
@@ -413,63 +625,77 @@ export function ScreenOffers() {
           gap: 14,
         }}
       >
-        {offers.map((o, i) => (
-          <div
-            key={i}
-            className={o.dark ? "pf-petrol-card" : undefined}
-            style={{
-              background: o.dark ? PF.petrol9 : PF.white,
-              color: o.dark ? PF.white : PF.fg1,
-              borderRadius: 20,
-              padding: 20,
-              boxShadow: o.dark
-                ? "var(--pf-shadow-petrol)"
-                : "var(--pf-shadow-md)",
-              border: o.dark ? "none" : "1px solid #E6EAEA",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
+        {offers.map((o, i) => {
+          const hero = o.kind === "hero";
+          const bg = hero ? PF.petrol9 : PF.petrol1;
+          const fg = hero ? PF.white : PF.petrol11;
+          const tagColor = hero ? PF.petrol2 : PF.petrol7;
+          return (
             <div
+              key={i}
+              className={hero ? "pf-petrol-card" : undefined}
               style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: ".06em",
-                textTransform: "uppercase",
-                color: o.dark ? PF.gelb : PF.petrol7,
-                opacity: o.dark ? 0.95 : 0.65,
+                background: bg,
+                color: fg,
+                borderRadius: 20,
+                padding: hero ? "24px 22px 26px" : 20,
+                minHeight: hero ? 168 : 0,
+                boxShadow: hero ? "0 8px 20px rgba(0,75,90,.10)" : "none",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: hero ? "space-between" : "flex-start",
+                gap: hero ? 18 : 4,
+                position: "relative",
+                overflow: "hidden",
               }}
             >
-              {o.tag}
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: ".06em",
+                  textTransform: "uppercase",
+                  opacity: hero ? 0.8 : 0.85,
+                  color: tagColor,
+                }}
+              >
+                {o.tag}
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: hero ? 22 : 17,
+                    fontWeight: 700,
+                    marginTop: hero ? 0 : 6,
+                    lineHeight: 1.25,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {o.title}
+                  {o.highlight && (
+                    <>
+                      {" · "}
+                      <span style={{ color: hero ? PF.gelb : "inherit" }}>
+                        {o.highlight}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 300,
+                    marginTop: 4,
+                    opacity: hero ? 0.8 : 0.7,
+                    color: hero ? "inherit" : PF.petrol7,
+                  }}
+                >
+                  {o.sub}
+                </div>
+              </div>
             </div>
-            <div
-              style={{
-                fontSize: 18,
-                fontWeight: 700,
-                marginTop: 6,
-                lineHeight: 1.25,
-              }}
-            >
-              {o.title}
-              {o.highlight && (
-                <>
-                  {" · "}
-                  <span style={{ color: PF.gelb }}>{o.highlight}</span>
-                </>
-              )}
-            </div>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 300,
-                marginTop: 4,
-                opacity: 0.75,
-              }}
-            >
-              {o.sub}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div style={{ height: 20 }} />
     </PFScreen>
@@ -479,15 +705,18 @@ export function ScreenOffers() {
 /* ─── SERVICES ────────────────────────────────────────────────────── */
 export function ScreenServices() {
   return (
-    <PFScreen bg={PF.white}>
+    <PFScreen bg={PF.bgAlt}>
       <PFHeader large title="Services" />
-      <PFListRow icon="card" label="Cards" meta="2 active" />
-      <PFListRow icon="user" label="Profile & limits" />
-      <PFListRow icon="face-id" label="Login & security" />
-      <PFListRow icon="pig" label="Retirement (3a)" />
-      <PFListRow icon="trending-up" label="E-Trading" />
-      <PFListRow icon="bell" label="Notifications" />
-      <PFListRow icon="settings" label="Settings" />
+      <div style={{ height: 8 }} />
+      <PFCardList>
+        <PFListRow icon="card" label="Cards" meta="2 active" />
+        <PFListRow icon="user" label="Profile & limits" />
+        <PFListRow icon="face-id" label="Login & security" />
+        <PFListRow icon="pig" label="Retirement (3a)" />
+        <PFListRow icon="trending-up" label="E-Trading" />
+        <PFListRow icon="bell" label="Notifications" />
+        <PFListRow icon="settings" label="Settings" />
+      </PFCardList>
       <div style={{ padding: "32px 20px" }}>
         <PFButton kind="ghost" fullWidth>
           Sign out
@@ -516,7 +745,6 @@ export function ScreenLogin() {
       }}
     >
       <div>
-        {/* Official PostFinance signet on gelb square */}
         <img
           src="/brand/postfinance-mark.svg"
           width={56}
@@ -573,7 +801,8 @@ export function ScreenLogin() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 20px 40px rgba(0,0,0,.25), 0 0 0 6px rgba(255,204,0,.12)",
+            boxShadow:
+              "0 20px 40px rgba(0,0,0,.25), 0 0 0 6px rgba(255,204,0,.12)",
           }}
         >
           <Icon name="face-id" size={42} color={PF.gelb} stroke={1.8} />
