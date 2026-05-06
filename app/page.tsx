@@ -23,15 +23,37 @@ export default function Page() {
       >
         <div
           style={{
-            fontSize: 12,
-            fontWeight: 700,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: PF.petrol9,
-            opacity: 0.6,
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
           }}
         >
-          PostFinance · iOS app — UI kit
+          <img
+            src="/brand/postfinance-mark.svg"
+            width={36}
+            height={36}
+            alt="PostFinance"
+            style={{ borderRadius: 8 }}
+          />
+          <img
+            src="/brand/postfinance-logo.svg"
+            height={20}
+            alt="PostFinance"
+            style={{ display: "block" }}
+          />
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: PF.petrol9,
+              opacity: 0.5,
+              marginLeft: 8,
+            }}
+          >
+            iOS app — UI kit
+          </span>
         </div>
         <h1
           style={{

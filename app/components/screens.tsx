@@ -516,31 +516,18 @@ export function ScreenLogin() {
       }}
     >
       <div>
-        {/* PostFinance signet on gelb square */}
-        <div
+        {/* Official PostFinance signet on gelb square */}
+        <img
+          src="/brand/postfinance-mark.svg"
+          width={56}
+          height={56}
+          alt="PostFinance"
           style={{
-            width: 56,
-            height: 56,
+            display: "block",
             borderRadius: 14,
-            background: PF.gelb,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
           }}
-        >
-          <span
-            style={{
-              fontSize: 30,
-              fontWeight: 700,
-              color: PF.petrol9,
-              lineHeight: 1,
-              letterSpacing: "-0.04em",
-            }}
-          >
-            ₽
-          </span>
-        </div>
+        />
         <div
           style={{
             fontSize: 36,

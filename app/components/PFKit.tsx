@@ -77,7 +77,7 @@ export function PFHeader({
         alignItems: large ? "flex-end" : "center",
         justifyContent: "space-between",
         minHeight: large ? 96 : 52,
-        background: PF.white,
+        background: "transparent",
       }}
     >
       <span
@@ -119,9 +119,11 @@ export function PFAccountCard({
         borderRadius: 20,
         padding: 20,
         margin: "0 20px",
+        minHeight: 184,
         boxShadow: "var(--pf-shadow-petrol)",
         display: "flex",
         flexDirection: "column",
+        justifyContent: "space-between",
         gap: 16,
         position: "relative",
         overflow: "hidden",
