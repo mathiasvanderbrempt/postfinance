@@ -36,12 +36,17 @@ export default function Page() {
             alt="PostFinance"
             style={{ borderRadius: 8 }}
           />
-          <img
-            src="/brand/postfinance-logo.svg"
-            height={20}
-            alt="PostFinance"
-            style={{ display: "block" }}
-          />
+          <span
+            style={{
+              fontSize: 20,
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+              color: PF.petrol9,
+              lineHeight: 1,
+            }}
+          >
+            PostFinance
+          </span>
           <span
             style={{
               fontSize: 12,
@@ -59,7 +64,7 @@ export default function Page() {
         <h1
           style={{
             margin: "12px 0 0",
-            fontSize: 56,
+            fontSize: "clamp(28px, 6.5vw, 56px)",
             lineHeight: 1.05,
             fontWeight: 700,
             letterSpacing: "-0.02em",

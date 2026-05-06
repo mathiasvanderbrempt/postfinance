@@ -68,7 +68,17 @@ function DSHeader() {
           }}
         >
           <img src="/brand/postfinance-mark.svg" width={44} height={44} alt="" style={{ borderRadius: 10 }} />
-          <img src="/brand/postfinance-logo-white.svg" height={26} alt="PostFinance" />
+          <span
+            style={{
+              fontSize: 26,
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+              color: PF.white,
+              lineHeight: 1,
+            }}
+          >
+            PostFinance
+          </span>
         </div>
         <div
           style={{
@@ -84,7 +94,7 @@ function DSHeader() {
         <h1
           style={{
             margin: "16px 0 0",
-            fontSize: 72,
+            fontSize: "clamp(34px, 8vw, 72px)",
             fontWeight: 700,
             letterSpacing: "-0.025em",
             lineHeight: 1.02,
