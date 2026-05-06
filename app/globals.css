@@ -1,0 +1,113 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap");
+
+:root {
+  /* Petrol */
+  --pf-petrol-1:  #E6EEF0;
+  --pf-petrol-2:  #C2D4D8;
+  --pf-petrol-3:  #99B5BC;
+  --pf-petrol-4:  #6F95A0;
+  --pf-petrol-5:  #4A7984;
+  --pf-petrol-6:  #2A6470;
+  --pf-petrol-7:  #15555F;
+  --pf-petrol-8:  #074E58;
+  --pf-petrol-9:  #004B5A;
+  --pf-petrol-10: #003D49;
+  --pf-petrol-11: #002B33;
+
+  /* Gelb */
+  --pf-gelb:      #FFCC00;
+  --pf-gelb-dark: #E6B800;
+
+  /* Grau */
+  --pf-grau-1: #F8F8F8;
+  --pf-grau-2: #EDEDED;
+  --pf-grau-3: #DEDEDE;
+  --pf-grau-4: #BDBDBD;
+  --pf-grau-5: #9A9A9A;
+  --pf-grau-6: #6E6E6E;
+  --pf-grau-7: #4A4A4A;
+  --pf-grau-8: #1A1A1A;
+
+  --pf-white: #FFFFFF;
+
+  /* Semantic */
+  --pf-success-fg: #1E7A48;
+  --pf-danger-fg:  #B3261E;
+
+  /* Type */
+  --pf-font: "PostFinance Grotesk", "Inter", -apple-system, system-ui,
+             "Segoe UI", Roboto, sans-serif;
+  --pf-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  /* Shadows */
+  --pf-shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.04);
+  --pf-shadow-md: 0 20px 40px rgba(0, 0, 0, 0.06);
+  --pf-shadow-lg: 0 40px 80px rgba(0, 0, 0, 0.08);
+  --pf-shadow-petrol: 0 20px 40px rgba(0, 75, 90, 0.18);
+
+  /* Phone-shell shadow on canvas */
+  --pf-shadow-phone:
+    0 60px 120px rgba(0, 75, 90, 0.18),
+    0 1px 0 rgba(255,255,255,0.05) inset;
+
+  /* Canvas */
+  --pf-bg-canvas: #DDE9EA;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--pf-font);
+  font-weight: 300;
+  color: var(--pf-grau-8);
+  background: var(--pf-bg-canvas);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button { font-family: inherit; }
+
+::selection { background: var(--pf-gelb); color: var(--pf-petrol-11); }
+
+.pf-screen::-webkit-scrollbar { display: none; }
+.pf-screen { scrollbar-width: none; }
+
+/* Canvas horizontal scroll */
+.pf-canvas-scroll::-webkit-scrollbar { height: 10px; }
+.pf-canvas-scroll::-webkit-scrollbar-track { background: transparent; }
+.pf-canvas-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 75, 90, 0.18);
+  border-radius: 999px;
+}
+
+/* Petrol card sheen — slow, subtle */
+@keyframes pf-sheen {
+  0%, 100% { transform: translateX(-30%) translateY(-10%); opacity: 0.0; }
+  50%      { transform: translateX(20%)  translateY(0%);   opacity: 0.7; }
+}
+.pf-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+}
+.pf-sheen::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 70%;
+  height: 180%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255,255,255,0.08) 0%,
+    rgba(255,255,255,0) 60%
+  );
+  animation: pf-sheen 9s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-sheen::before { animation: none; opacity: 0.4; }
+}

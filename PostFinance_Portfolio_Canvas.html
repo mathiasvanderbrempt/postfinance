@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostFinance Banking App — Design Case Study</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root {
+    --pf-yellow: #FFCC00;
+    --pf-yellow-dark: #E6B800;
+    --pf-yellow-light: #FFF4CC;
+    --pf-black: #1A1A1A;
+    --pf-gray-50: #F8F8F8;
+    --pf-gray-100: #F0F0F0;
+    --pf-gray-200: #E0E0E0;
+    --pf-gray-400: #999999;
+    --pf-gray-600: #666666;
+    --pf-gray-800: #333333;
+    --pf-success: #00B67A;
+    --pf-error: #E53935;
+    --pf-info: #2196F3;
+    --pf-white: #FFFFFF;
+    --canvas-bg: #0A0A0A;
+    --card-bg: #161616;
+    --card-border: #2A2A2A;
+    --text-primary: #F0F0F0;
+    --text-secondary: #888888;
+    --text-tertiary: #555555;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--canvas-bg);
+    color: var(--text-primary);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    cursor: grab;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body.grabbing { cursor: grabbing; }
+
+  /* Canvas */
+  #canvas {
+    position: absolute;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  /* Top bar */
+  #topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 56px;
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--card-border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    z-index: 1000;
+  }
+
+  #topbar .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  #topbar .logo-mark {
+    width: 32px; height: 32px;
+    background: var(--pf-yellow);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: var(--pf-black);
+  }
+
+  #topbar .logo-text {
+    font-weight: 700; font-size: 16px; color: var(--text-primary);
+    letter-spacing: -0.3px;
+  }
+
+  #topbar .logo-text span { color: var(--text-secondary); font-weight: 400; margin-left: 6px; font-size: 13px; }
+
+  #topbar .controls {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .zoom-btn {
+    width: 36px; height: 36px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 18px; font-weight: 500;
+    transition: all 0.15s;
+  }
+
+  .zoom-btn:hover { background: #222; border-color: #444; }
+
+  #zoom-level {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text-secondary);
+    min-width: 45px; text-align: center;
+  }
+
+  /* Minimap */
+  #minimap {
+    position: fixed; bottom: 20px; right: 20px;
+    width: 200px; height: 140px;
+    background: rgba(22,22,22,0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    z-index: 1000;
+    overflow: hidden;
+    padding: 8px;
+  }
+
+  #minimap-viewport {
+    border: 1.5px solid var(--pf-yellow);
+    border-radius: 2px;
+    position: absolute;
+    pointer-events: none;
+    transition: all 0.1s;
+  }
+
+  .minimap-node {
+    position: absolute;
+    background: var(--card-border);
+    border-radius: 1px;
+  }
+
+  /* Side panel - table of contents */
+  #toc {
+    position: fixed; left: 0; top: 56px;
+    width: 260px; height: calc(100vh - 56px);
+    background: rgba(16,16,16,0.95);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--card-border);
+    z-index: 999;
+    overflow-y: auto;
+    padding: 20px 16px;
+    transform: translateX(-260px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #toc.open { transform: translateX(0); }
+
+  #toc-toggle {
+    position: fixed; left: 16px; top: 68px;
+    width: 40px; height: 40px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    color: var(--text-primary);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 1001;
+    transition: all 0.3s;
+    font-size: 16px;
+  }
+
+  #toc.open ~ #toc-toggle { left: 276px; }
+
+  .toc-section {
+    margin-bottom: 20px;
+  }
+
+  .toc-section-title {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--text-tertiary);
+    margin-bottom: 8px; padding: 0 8px;
+  }
+
+  .toc-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px; border-radius: 8px;
+    cursor: pointer; transition: all 0.15s;
+    font-size: 13px; color: var(--text-secondary);
+  }
+
+  .toc-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+
+  .toc-item .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .toc-item .dot.yellow { background: var(--pf-yellow); }
+  .toc-item .dot.green { background: var(--pf-success); }
+  .toc-item .dot.blue { background: var(--pf-info); }
+  .toc-item .dot.gray { background: var(--text-tertiary); }
+
+  /* Canvas nodes */
+  .canvas-node {
+    position: absolute;
+    transition: box-shadow 0.3s;
+  }
+
+  /* Section label */
+  .section-label {
+    position: absolute;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  /* Flow connector lines */
+  .flow-line {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  /* Documentation card */
+  .doc-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 380px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+
+  .doc-card.wide { max-width: 520px; }
+  .doc-card.narrow { max-width: 300px; }
+
+  .doc-card h2 {
+    font-size: 18px; font-weight: 700;
+    margin-bottom: 4px; letter-spacing: -0.3px;
+    color: var(--text-primary);
+  }
+
+  .doc-card .subtitle {
+    font-size: 12px; color: var(--text-tertiary);
+    margin-bottom: 16px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+
+  .doc-card p {
+    font-size: 13px; line-height: 1.65;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+
+  .doc-card ul {
+    list-style: none; padding: 0;
+  }
+
+  .doc-card ul li {
+    font-size: 13px; color: var(--text-secondary);
+    padding: 6px 0; line-height: 1.5;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+
+  .doc-card ul li::before {
+    content: '→'; color: var(--pf-yellow);
+    flex-shrink: 0; font-weight: 600;
+  }
+
+  .doc-card .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px; font-weight: 600;
+    margin-right: 4px; margin-bottom: 4px;
+  }
+
+  .tag.yellow { background: rgba(255,204,0,0.15); color: var(--pf-yellow); }
+  .tag.green { background: rgba(0,182,122,0.15); color: var(--pf-success); }
+  .tag.blue { background: rgba(33,150,243,0.15); color: var(--pf-info); }
+  .tag.gray { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
+
+  /* Color swatch row */
+  .color-row {
+    display: flex; gap: 8px; margin: 8px 0;
+  }
+
+  .color-swatch {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+  }
+
+  .color-swatch .label {
+    position: absolute; bottom: -18px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px; color: var(--text-tertiary);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+
+  /* iPhone mockup */
+  .iphone-frame {
+    width: 280px;
+    height: 572px;
+    background: #000;
+    border-radius: 40px;
+    padding: 12px;
+    position: relative;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 0 0 2px #333;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
+  }
+
+  .iphone-frame:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 60px rgba(0,0,0,0.6), inset 0 0 0 2px #444, 0 0 0 1px rgba(255,204,0,0.2);
+  }
+
+  .iphone-screen {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border-radius: 30px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Dynamic Island */
+  .dynamic-island {
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 90px; height: 25px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 10;
+  }
+
+  /* Screen content */
+  .screen-content {
+    width: 100%; height: 100%;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .screen-content::-webkit-scrollbar { display: none; }
+
+  /* Status bar */
+  .status-bar {
+    display: flex; justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px 0;
+    font-size: 12px; font-weight: 600;
+    color: #1A1A1A;
+    position: relative; z-index: 5;
+  }
+
+  .status-bar .time { font-size: 14px; font-weight: 700; }
+  .status-bar .icons { display: flex; gap: 4px; align-items: center; }
+
+  /* Tab bar (inside phone) */
+  .phone-tab-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 70px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-top: 0.5px solid #E0E0E0;
+    display: flex; justify-content: space-around; align-items: flex-start;
+    padding-top: 8px;
+    z-index: 20;
+  }
+
+  .tab-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-size: 10px; color: #999;
+  }
+
+  .tab-item.active { color: var(--pf-yellow); }
+  .tab-item svg { width: 22px; height: 22px; }
+
+  /* Screen label */
+  .screen-label {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .screen-sublabel {
+    text-align: center;
+    font-size: 11px; color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  /* Flow arrows */
+  .flow-arrow {
+    position: absolute;
+    display: flex; align-items: center;
+    color: var(--text-tertiary);
+    font-size: 20px;
+  }
+
+  .flow-arrow-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    position: absolute;
+    white-space: nowrap;
+    background: var(--canvas-bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* Annotation callout */
+  .annotation {
+    position: absolute;
+    max-width: 220px;
+    padding: 14px 16px;
+    background: rgba(255,204,0,0.08);
+    border: 1px solid rgba(255,204,0,0.2);
+    border-radius: 12px;
+    font-size: 12px; line-height: 1.5;
+    color: var(--pf-yellow);
+  }
+
+  .annotation .ann-title {
+    font-weight: 700; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+
+  .annotation .ann-body {
+    color: rgba(255,204,0,0.7);
+    font-weight: 400;
+  }
+
+  /* Process badge */
+  .process-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 6px; margin-bottom: 6px;
+  }
+
+  .process-badge .badge-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+  }
+
+  /* Modal overlay for interactive phone */
+  #phone-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(20px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  #phone-modal.visible {
+    display: flex;
+    opacity: 1;
+  }
+
+  #phone-modal .modal-phone {
+    width: 375px; height: 760px;
+    background: #000;
+    border-radius: 52px;
+    padding: 16px;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+    position: relative;
+  }
+
+  #phone-modal .modal-phone .iphone-screen {
+    border-radius: 38px;
+  }
+
+  #phone-modal .close-modal {
+    position: absolute; top: -50px; right: 0;
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.1);
+    border: none; border-radius: 50%;
+    color: white; font-size: 20px;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+  }
+
+  /* Horizontal flow connector */
+  .h-connector {
+    position: absolute;
+    height: 2px;
+    background: linear-gradient(90deg, var(--card-border), var(--pf-yellow), var(--card-border));
+    opacity: 0.4;
+  }
+
+  .h-connector::after {
+    content: '→';
+    position: absolute; right: -12px; top: -9px;
+    color: var(--pf-yellow); font-size: 16px;
+  }
+
+  /* Vertical flow connector */
+  .v-connector {
+    position: absolute;
+    width: 2px;
+    background: linear-gradient(180deg, var(--card-border), var(--pf-yellow), var(--card-border));
+    opacity: 0.4;
+  }
+
+  /* Welcome screen / intro panel */
+  .hero-panel {
+    width: 500px;
+    padding: 48px;
+    position: absolute;
+  }
+
+  .hero-panel h1 {
+    font-size: 48px; font-weight: 900;
+    letter-spacing: -2px; line-height: 1.05;
+    margin-bottom: 8px;
+  }
+
+  .hero-panel h1 .yellow { color: var(--pf-yellow); }
+
+  .hero-panel .hero-sub {
+    font-size: 16px; color: var(--text-secondary);
+    line-height: 1.6; margin-bottom: 24px;
+    max-width: 400px;
+  }
+
+  .hero-panel .hero-meta {
+    display: flex; gap: 24px;
+    font-size: 12px; color: var(--text-tertiary);
+  }
+
+  .hero-panel .hero-meta div {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+
+  .hero-panel .hero-meta .val {
+    font-size: 20px; font-weight: 800;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Interaction pattern card */
+  .pattern-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+    width: 240px;
+  }
+
+  .pattern-card .pattern-icon {
+    width: 40px; height: 40px;
+    background: rgba(255,204,0,0.1);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+
+  .pattern-card h3 {
+    font-size: 14px; font-weight: 700;
+    margin-bottom: 6px; color: var(--text-primary);
+  }
+
+  .pattern-card p {
+    font-size: 12px; line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  /* Keyboard shortcuts helper */
+  #shortcuts {
+    position: fixed; bottom: 20px; left: 20px;
+    display: flex; gap: 12px;
+    z-index: 1000;
+  }
+
+  .shortcut {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--text-tertiary);
+  }
+
+  .shortcut kbd {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+  }
+
+  /* Home screen content styles (inside phone) */
+  .pf-greeting { padding: 8px 20px 0; }
+  .pf-greeting h2 {
+    font-size: 20px; font-weight: 700;
+    color: #1A1A1A; letter-spacing: -0.3px;
+  }
+  .pf-greeting p { font-size: 12px; color: #999; margin-top: 2px; }
+
+  .pf-account-cards {
+    display: flex; gap: 10px;
+    padding: 12px 20px;
+    overflow-x: auto;
+    -ms-overflow-style: none; scrollbar-width: none;
+  }
+  .pf-account-cards::-webkit-scrollbar { display: none; }
+
+  .pf-acc-card {
+    flex-shrink: 0;
+    width: 200px;
+    background: #F8F8F8;
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .pf-acc-card .acc-type {
+    font-size: 10px; font-weight: 600;
+    color: #999; text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .pf-acc-card .acc-name {
+    font-size: 13px; font-weight: 600;
+    color: #1A1A1A; margin: 2px 0 8px;
+  }
+
+  .pf-acc-card .acc-balance {
+    font-size: 20px; font-weight: 700;
+    color: #1A1A1A;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: -0.5px;
+  }
+
+  .pf-acc-card .acc-sparkline {
+    margin-top: 8px;
+    height: 24px;
+  }
+
+  .pf-quick-actions {
+    display: flex; justify-content: space-around;
+    padding: 8px 20px 16px;
+  }
+
+  .pf-qa {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+  }
+
+  .pf-qa-icon {
+    width: 48px; height: 48px;
+    background: var(--pf-yellow);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .pf-qa-label { font-size: 11px; color: #666; font-weight: 500; }
+
+  .pf-section-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 20px; margin-bottom: 8px;
+  }
+
+  .pf-section-header h3 {
+    font-size: 16px; font-weight: 700; color: #1A1A1A;
+  }
+
+  .pf-section-header a {
+    font-size: 12px; color: var(--pf-yellow);
+    text-decoration: none; font-weight: 600;
+  }
+
+  .pf-tx-row {
+    display: flex; align-items: center;
+    padding: 10px 20px; gap: 12px;
+  }
+
+  .pf-tx-icon {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+
+  .pf-tx-info { flex: 1; }
+  .pf-tx-name { font-size: 13px; font-weight: 600; color: #1A1A1A; }
+  .pf-tx-date { font-size: 11px; color: #999; margin-top: 1px; }
+  .pf-tx-amount {
+    font-size: 14px; font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: right;
+  }
+  .pf-tx-amount.negative { color: #1A1A1A; }
+  .pf-tx-amount.positive { color: var(--pf-success); }
+
+  .pf-spending-ring {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 20px;
+    margin: 0 20px 20px;
+    background: #F8F8F8;
+    border-radius: 14px;
+  }
+
+  /* Account detail styles */
+  .pf-account-header {
+    padding: 0 20px;
+  }
+
+  .pf-balance-big {
+    font-size: 32px; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: #1A1A1A; letter-spacing: -1px;
+    padding: 4px 20px 2px;
+  }
+
+  .pf-balance-sub {
+    font-size: 12px; color: #999;
+    padding: 0 20px 12px;
+  }
+
+  .pf-filter-chips {
+    display: flex; gap: 6px;
+    padding: 0 20px 12px;
+    overflow-x: auto;
+  }
+
+  .pf-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid #E0E0E0;
+    color: #666;
+  }
+
+  .pf-chip.active {
+    background: #1A1A1A;
+    color: white;
+    border-color: #1A1A1A;
+  }
+
+  .pf-date-group {
+    font-size: 12px; font-weight: 700;
+    color: #999; text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 20px 6px;
+  }
+
+  /* Payment form styles */
+  .pf-form-section {
+    padding: 0 20px;
+    margin-bottom: 16px;
+  }
+
+  .pf-input-label {
+    font-size: 12px; font-weight: 600;
+    color: #999; margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .pf-input {
+    width: 100%;
+    height: 48px;
+    background: #F8F8F8;
+    border: 1.5px solid transparent;
+    border-radius: 12px;
+    padding: 0 14px;
+    font-size: 14px;
+    color: #1A1A1A;
+    font-family: inherit;
+    outline: none;
+  }
+
+  .pf-input:focus { border-color: var(--pf-yellow); }
+
+  .pf-amount-input {
+    text-align: center;
+    font-size: 36px; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    background: transparent; border: none;
+    color: #1A1A1A; padding: 20px 0;
+    letter-spacing: -1px;
+  }
+
+  .pf-cta {
+    display: block; width: calc(100% - 40px);
+    margin: 0 20px 100px;
+    height: 52px;
+    background: var(--pf-yellow);
+    border: none; border-radius: 14px;
+    font-size: 16px; font-weight: 600;
+    color: #1A1A1A; cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* Card overview styles */
+  .pf-card-visual {
+    margin: 4px 20px 16px;
+    height: 170px;
+    background: linear-gradient(135deg, #1A1A1A 0%, #333 100%);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pf-card-visual::after {
+    content: '';
+    position: absolute; top: -20px; right: -20px;
+    width: 120px; height: 120px;
+    background: var(--pf-yellow);
+    border-radius: 50%;
+    opacity: 0.15;
+  }
+
+  .pf-card-visual .card-logo {
+    font-size: 14px; font-weight: 800;
+    color: var(--pf-yellow); letter-spacing: 0.5px;
+  }
+
+  .pf-card-visual .card-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px; color: rgba(255,255,255,0.7);
+    margin-top: 32px; letter-spacing: 2px;
+  }
+
+  .pf-card-visual .card-holder {
+    font-size: 12px; color: rgba(255,255,255,0.5);
+    margin-top: 16px; text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .pf-card-visual .card-expiry {
+    position: absolute; bottom: 20px; right: 20px;
+    font-size: 12px; color: rgba(255,255,255,0.5);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .pf-toggles {
+    display: flex; gap: 8px; padding: 0 20px;
+    margin-bottom: 16px;
+  }
+
+  .pf-toggle-item {
+    flex: 1;
+    background: #F8F8F8;
+    border-radius: 12px;
+    padding: 12px; text-align: center;
+  }
+
+  .pf-toggle-item .t-icon { font-size: 20px; margin-bottom: 4px; }
+  .pf-toggle-item .t-label { font-size: 10px; color: #666; font-weight: 600; }
+  .pf-toggle-item .t-status {
+    font-size: 10px; font-weight: 700;
+    margin-top: 4px;
+  }
+  .pf-toggle-item .t-status.on { color: var(--pf-success); }
+  .pf-toggle-item .t-status.off { color: var(--pf-error); }
+
+  /* Investment styles */
+  .pf-portfolio-value {
+    padding: 4px 20px;
+  }
+
+  .pf-portfolio-value .pv-label { font-size: 12px; color: #999; }
+  .pf-portfolio-value .pv-amount {
+    font-size: 32px; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: #1A1A1A; letter-spacing: -1px;
+  }
+
+  .pf-portfolio-value .pv-change {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 13px; font-weight: 600;
+    color: var(--pf-success);
+    margin-top: 4px;
+  }
+
+  .pf-chart-placeholder {
+    margin: 8px 20px;
+    height: 120px;
+    background: #F8F8F8;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pf-time-pills {
+    display: flex; gap: 4px;
+    padding: 8px 20px;
+  }
+
+  .pf-pill {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 11px; font-weight: 600;
+    color: #999;
+  }
+
+  .pf-pill.active {
+    background: #1A1A1A; color: white;
+  }
+
+  /* Profile styles */
+  .pf-profile-header {
+    display: flex; flex-direction: column;
+    align-items: center; padding: 12px 20px 20px;
+  }
+
+  .pf-avatar {
+    width: 64px; height: 64px;
+    background: var(--pf-yellow);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 10px;
+  }
+
+  .pf-profile-name { font-size: 18px; font-weight: 700; color: #1A1A1A; }
+  .pf-profile-acct { font-size: 12px; color: #999; font-family: 'JetBrains Mono', monospace; }
+
+  .pf-settings-group {
+    margin: 0 20px 12px;
+    background: #F8F8F8;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .pf-settings-item {
+    display: flex; align-items: center;
+    padding: 14px 16px; gap: 12px;
+    border-bottom: 0.5px solid #E0E0E0;
+  }
+
+  .pf-settings-item:last-child { border-bottom: none; }
+
+  .pf-settings-item .si-icon {
+    width: 32px; height: 32px;
+    background: white;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .pf-settings-item .si-label { flex: 1; font-size: 14px; color: #1A1A1A; font-weight: 500; }
+  .pf-settings-item .si-value { font-size: 12px; color: #999; }
+  .pf-settings-item .si-arrow { color: #CCC; font-size: 14px; }
+
+  /* Large nav title */
+  .pf-large-title {
+    font-size: 28px; font-weight: 800;
+    color: #1A1A1A; padding: 8px 20px 4px;
+    letter-spacing: -0.5px;
+  }
+
+  /* Search bar */
+  .pf-search {
+    margin: 6px 20px 8px;
+    height: 36px;
+    background: #F0F0F0;
+    border-radius: 10px;
+    display: flex; align-items: center;
+    padding: 0 12px; gap: 8px;
+    font-size: 13px; color: #999;
+  }
+
+  /* Payment success */
+  .pf-success-screen {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 20px;
+    min-height: 400px;
+  }
+
+  .pf-success-check {
+    width: 80px; height: 80px;
+    background: rgba(0,182,122,0.1);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
+
+  .pf-success-title {
+    font-size: 22px; font-weight: 700;
+    color: #1A1A1A; margin-bottom: 8px;
+  }
+
+  .pf-success-amount {
+    font-size: 28px; font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: #1A1A1A; margin-bottom: 4px;
+  }
+
+  .pf-success-to {
+    font-size: 14px; color: #666;
+    margin-bottom: 24px;
+  }
+
+  .pf-success-details {
+    width: 100%;
+    background: #F8F8F8;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+
+  .pf-success-row {
+    display: flex; justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+
+  .pf-success-row .label { color: #999; }
+  .pf-success-row .value { color: #1A1A1A; font-weight: 500; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero-panel h1 { font-size: 32px; }
+    .iphone-frame { width: 240px; height: 490px; border-radius: 34px; padding: 10px; }
+    .iphone-screen { border-radius: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div id="topbar">
+  <div class="logo">
+    <div class="logo-mark">PF</div>
+    <div class="logo-text">PostFinance <span>Design Case Study</span></div>
+  </div>
+  <div class="controls">
+    <button class="zoom-btn" onclick="zoomOut()">−</button>
+    <span id="zoom-level">100%</span>
+    <button class="zoom-btn" onclick="zoomIn()">+</button>
+    <button class="zoom-btn" onclick="resetView()" style="font-size:13px;width:auto;padding:0 12px;">⌂ Reset</button>
+  </div>
+</div>
+
+<!-- TOC Toggle -->
+<div id="toc-toggle" onclick="toggleTOC()">☰</div>
+
+<!-- Table of Contents -->
+<div id="toc">
+  <div class="toc-section">
+    <div class="toc-section-title">Process</div>
+    <div class="toc-item" onclick="navigateTo(100, 100)"><div class="dot yellow"></div>Project Overview</div>
+    <div class="toc-item" onclick="navigateTo(100, 700)"><div class="dot blue"></div>PRD & Requirements</div>
+    <div class="toc-item" onclick="navigateTo(100, 1250)"><div class="dot blue"></div>Design System</div>
+  </div>
+  <div class="toc-section">
+    <div class="toc-section-title">Core Screens</div>
+    <div class="toc-item" onclick="navigateTo(700, 100)"><div class="dot yellow"></div>Home Dashboard</div>
+    <div class="toc-item" onclick="navigateTo(1060, 100)"><div class="dot yellow"></div>Account Detail</div>
+    <div class="toc-item" onclick="navigateTo(1420, 100)"><div class="dot yellow"></div>Payment Form</div>
+    <div class="toc-item" onclick="navigateTo(1780, 100)"><div class="dot yellow"></div>Cards Overview</div>
+    <div class="toc-item" onclick="navigateTo(2140, 100)"><div class="dot yellow"></div>Investments</div>
+    <div class="toc-item" onclick="navigateTo(2500, 100)"><div class="dot yellow"></div>Profile</div>
+  </div>
+  <div class="toc-section">
+    <div class="toc-section-title">Flows</div>
+    <div class="toc-item" onclick="navigateTo(700, 800)"><div class="dot green"></div>Payment Flow</div>
+    <div class="toc-item" onclick="navigateTo(1780, 800)"><div class="dot green"></div>Investment Flow</div>
+  </div>
+  <div class="toc-section">
+    <div class="toc-section-title">Patterns</div>
+    <div class="toc-item" onclick="navigateTo(700, 1450)"><div class="dot gray"></div>Native Interactions</div>
+    <div class="toc-item" onclick="navigateTo(1420, 1450)"><div class="dot gray"></div>Micro-animations</div>
+  </div>
+</div>
+
+<!-- Canvas -->
+<div id="canvas">
+
+  <!-- ==================== HERO / PROJECT OVERVIEW ==================== -->
+  <div class="hero-panel" style="left: 100px; top: 100px;">
+    <div style="margin-bottom: 24px;">
+      <span class="process-badge"><span class="badge-dot" style="background:var(--pf-yellow)"></span> Claude Cowork</span>
+      <span class="process-badge"><span class="badge-dot" style="background:var(--pf-info)"></span> Claude Design</span>
+      <span class="process-badge"><span class="badge-dot" style="background:var(--pf-success)"></span> Magic Patterns</span>
+    </div>
+    <h1>Post<span class="yellow">Finance</span></h1>
+    <h1 style="font-size: 36px; color: var(--text-secondary); font-weight: 400; margin-bottom: 24px;">Banking App Redesign</h1>
+    <p class="hero-sub">A complete consumer banking app designed with Swiss precision. From PRD to pixel-perfect screens, documented interaction patterns, and full design-to-dev handover.</p>
+    <div class="hero-meta">
+      <div><span class="val">20</span>Screens Designed</div>
+      <div><span class="val">7</span>User Flows</div>
+      <div><span class="val">45</span>Components</div>
+      <div><span class="val">4</span>Languages</div>
+    </div>
+  </div>
+
+  <!-- ==================== PRD CARD ==================== -->
+  <div class="canvas-node doc-card wide" style="left: 100px; top: 700px;">
+    <div class="subtitle">Product Requirements</div>
+    <h2>PRD — Feature Inventory</h2>
+    <p>Comprehensive product requirements covering all major banking workflows for PostFinance's 2.5M+ retail customers.</p>
+    <div style="margin-top: 12px;">
+      <span class="tag yellow">P0 — Core</span>
+      <span class="tag green">P1 — Important</span>
+      <span class="tag blue">P2 — Nice to have</span>
+    </div>
+    <ul style="margin-top: 12px;">
+      <li>Biometric login (Face ID / Touch ID)</li>
+      <li>Account dashboard with spending insights</li>
+      <li>QR-Bill scanning & payment flows</li>
+      <li>TWINT P2P integration</li>
+      <li>Card management & controls</li>
+      <li>Investment portfolio & savings goals</li>
+      <li>Standing orders & payment templates</li>
+      <li>Quadrilingual support (DE/FR/IT/EN)</li>
+    </ul>
+  </div>
+
+  <div class="canvas-node doc-card" style="left: 100px; top: 1100px;">
+    <div class="subtitle">Information Architecture</div>
+    <h2>Tab Structure</h2>
+    <p style="font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 2; color: var(--text-secondary);">
+      ┌─ Home<br>
+      │&nbsp;&nbsp; ├─ Account Cards<br>
+      │&nbsp;&nbsp; ├─ Quick Actions<br>
+      │&nbsp;&nbsp; └─ Recent Transactions<br>
+      ├─ Accounts<br>
+      │&nbsp;&nbsp; ├─ Account List<br>
+      │&nbsp;&nbsp; └─ Transaction History<br>
+      ├─ Pay<br>
+      │&nbsp;&nbsp; ├─ QR Scanner<br>
+      │&nbsp;&nbsp; ├─ Manual Payment<br>
+      │&nbsp;&nbsp; └─ Standing Orders<br>
+      ├─ Invest<br>
+      │&nbsp;&nbsp; ├─ Portfolio Overview<br>
+      │&nbsp;&nbsp; ├─ Fund Catalog<br>
+      │&nbsp;&nbsp; └─ Savings Goals<br>
+      └─ More<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; ├─ Cards<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; ├─ Settings<br>
+      &nbsp;&nbsp;&nbsp;&nbsp; └─ Support
+    </p>
+  </div>
+
+  <!-- ==================== DESIGN SYSTEM CARD ==================== -->
+  <div class="canvas-node doc-card" style="left: 100px; top: 1550px;">
+    <div class="subtitle">Design System</div>
+    <h2>PostFinance Brand</h2>
+    <p>Swiss precision meets modern banking. Yellow used sparingly as accent.</p>
+    <div class="color-row" style="margin-top: 16px;">
+      <div class="color-swatch" style="background: #FFCC00;"><span class="label">#FFCC00</span></div>
+      <div class="color-swatch" style="background: #1A1A1A;"><span class="label">#1A1A1A</span></div>
+      <div class="color-swatch" style="background: #F8F8F8;"><span class="label">#F8F8F8</span></div>
+      <div class="color-swatch" style="background: #00B67A;"><span class="label">#00B67A</span></div>
+      <div class="color-swatch" style="background: #E53935;"><span class="label">#E53935</span></div>
+    </div>
+    <div style="margin-top: 28px;">
+      <p style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Typography</p>
+      <div style="font-size: 28px; font-weight: 800; margin-bottom: 2px;">SF Pro Display</div>
+      <div style="font-family: 'JetBrains Mono'; font-size: 22px; margin-bottom: 8px;">CHF 12'450.00</div>
+      <p style="font-size: 12px; color: var(--text-secondary);">Monospace for all monetary values. Swiss apostrophe formatting for thousands.</p>
+    </div>
+    <div style="margin-top: 20px;">
+      <p style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Components</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <div style="height:44px;padding:0 24px;background:var(--pf-yellow);border-radius:12px;display:flex;align-items:center;font-weight:600;font-size:13px;color:#1A1A1A;">Primary CTA</div>
+        <div style="height:44px;padding:0 24px;border:1.5px solid var(--card-border);border-radius:12px;display:flex;align-items:center;font-weight:600;font-size:13px;color:var(--text-primary);">Secondary</div>
+      </div>
+      <div style="height:44px;background:rgba(255,255,255,0.06);border:1px solid var(--card-border);border-radius:10px;display:flex;align-items:center;padding:0 14px;font-size:13px;color:var(--text-tertiary);margin-bottom:8px;">Input field — 52px, 12px radius</div>
+      <p style="font-size: 12px; color: var(--text-secondary);">Cards: 16px radius, subtle shadow<br>Spacing: 8px base scale<br>Touch targets: ≥ 44px</p>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION LABEL — CORE SCREENS ==================== -->
+  <div class="section-label" style="left: 700px; top: 60px;">Core Screens</div>
+
+  <!-- SCREEN 1: HOME DASHBOARD -->
+  <div class="canvas-node" style="left: 700px; top: 100px;">
+    <div class="iphone-frame" onclick="openPhone('home')">
+      <div class="iphone-screen">
+        <div class="dynamic-island"></div>
+        <div class="screen-content" id="screen-home">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="icons">
+              <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="6" width="3" height="6" rx="1" fill="#1A1A1A"/><rect x="4.5" y="4" width="3" height="8" rx="1" fill="#1A1A1A"/><rect x="9" y="2" width="3" height="10" rx="1" fill="#1A1A1A"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="#1A1A1A"/></svg>
+              <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 3C10.7 3 13.1 4.2 14.8 6.1L16 4.8C14 2.5 11.2 1 8 1S2 2.5 0 4.8L1.2 6.1C2.9 4.2 5.3 3 8 3Z" fill="#1A1A1A"/><circle cx="8" cy="10" r="2" fill="#1A1A1A"/></svg>
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="#1A1A1A" stroke-width="1.2" fill="none"/><rect x="21" y="4" width="2" height="4" rx="1" fill="#1A1A1A"/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill="#1A1A1A"/></svg>
+            </div>
+          </div>
+          <div class="pf-greeting">
+            <h2>Good morning, Sarah</h2>
+            <p>Monday, May 3</p>
+          </div>
+          <div class="pf-account-cards">
+            <div class="pf-acc-card">
+              <div class="acc-type">Private Account</div>
+              <div class="acc-name">CHF Account</div>
+              <div class="acc-balance">CHF 12'450</div>
+              <div class="acc-sparkline">
+                <svg width="160" height="24" viewBox="0 0 160 24"><path d="M0 18 L20 14 L40 16 L60 10 L80 12 L100 6 L120 8 L140 4 L160 6" stroke="#FFCC00" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              </div>
+            </div>
+            <div class="pf-acc-card">
+              <div class="acc-type">Savings</div>
+              <div class="acc-name">Sparkonto</div>
+              <div class="acc-balance">CHF 34'200</div>
+              <div class="acc-sparkline">
+                <svg width="160" height="24" viewBox="0 0 160 24"><path d="M0 20 L20 18 L40 16 L60 15 L80 12 L100 10 L120 8 L140 6 L160 4" stroke="#00B67A" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="pf-quick-actions">
+            <div class="pf-qa"><div class="pf-qa-icon">↑</div><span class="pf-qa-label">Pay</span></div>
+            <div class="pf-qa"><div class="pf-qa-icon">⊞</div><span class="pf-qa-label">Scan QR</span></div>
+            <div class="pf-qa"><div class="pf-qa-icon">↓</div><span class="pf-qa-label">Request</span></div>
+            <div class="pf-qa"><div class="pf-qa-icon">+</div><span class="pf-qa-label">Top Up</span></div>
+          </div>
+          <div class="pf-section-header">
+            <h3>Recent</h3>
+            <a href="#">See all</a>
+          </div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#FFF3E0;">🛒</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">Migros</div><div class="pf-tx-date">Today, 14:23</div></div>
+            <div class="pf-tx-amount negative">-CHF 47.50</div>
+          </div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#E3F2FD;">🚂</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">SBB</div><div class="pf-tx-date">Today, 08:15</div></div>
+            <div class="pf-tx-amount negative">-CHF 32.00</div>
+          </div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#E8F5E9;">💰</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">Salary — Employer AG</div><div class="pf-tx-date">May 1</div></div>
+            <div class="pf-tx-amount positive">+CHF 7'850.00</div>
+          </div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#FFF3E0;">☕</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">Starbucks</div><div class="pf-tx-date">Apr 30</div></div>
+            <div class="pf-tx-amount negative">-CHF 6.80</div>
+          </div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#F3E5F5;">🏠</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">Rent — Wohnbau AG</div><div class="pf-tx-date">Apr 30</div></div>
+            <div class="pf-tx-amount negative">-CHF 1'850.00</div>
+          </div>
+          <div class="pf-section-header" style="margin-top:12px;">
+            <h3>Spending Pulse</h3>
+          </div>
+          <div class="pf-spending-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="22" fill="none" stroke="#E0E0E0" stroke-width="5"/>
+              <circle cx="26" cy="26" r="22" fill="none" stroke="#FFCC00" stroke-width="5" stroke-dasharray="86 138" stroke-linecap="round" transform="rotate(-90 26 26)"/>
+              <text x="26" y="29" text-anchor="middle" font-size="11" font-weight="700" fill="#1A1A1A">62%</text>
+            </svg>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#1A1A1A;">CHF 1'240</div>
+              <div style="font-size:11px;color:#999;">of CHF 2'000 weekly</div>
+            </div>
+          </div>
+          <div style="height: 80px;"></div>
+        </div>
+        <div class="phone-tab-bar">
+          <div class="tab-item active">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L4 9v12h5v-7h6v7h5V9z"/></svg>
+            <span>Home</span>
+          </div>
+          <div class="tab-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
+            <span>Accounts</span>
+          </div>
+          <div class="tab-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            <span>Pay</span>
+          </div>
+          <div class="tab-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="4 18 8 10 12 14 16 6 20 10"/></svg>
+            <span>Invest</span>
+          </div>
+          <div class="tab-item">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+            <span>More</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Home Dashboard</div>
+    <div class="screen-sublabel">Primary landing screen</div>
+  </div>
+
+  <!-- FLOW ARROW: Home → Account -->
+  <div class="h-connector" style="left: 995px; top: 400px; width: 50px;"></div>
+
+  <!-- SCREEN 2: ACCOUNT DETAIL -->
+  <div class="canvas-node" style="left: 1060px; top: 100px;">
+    <div class="iphone-frame" onclick="openPhone('account')">
+      <div class="iphone-screen">
+        <div class="dynamic-island"></div>
+        <div class="screen-content">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="icons">
+              <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="6" width="3" height="6" rx="1" fill="#1A1A1A"/><rect x="4.5" y="4" width="3" height="8" rx="1" fill="#1A1A1A"/><rect x="9" y="2" width="3" height="10" rx="1" fill="#1A1A1A"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="#1A1A1A"/></svg>
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="#1A1A1A" stroke-width="1.2" fill="none"/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill="#1A1A1A"/></svg>
+            </div>
+          </div>
+          <div style="padding:4px 20px 0;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:18px;color:#999;">←</span>
+          </div>
+          <div class="pf-large-title">Private Account</div>
+          <div class="pf-balance-big">CHF 12'450.00</div>
+          <div class="pf-balance-sub">Available balance</div>
+          <div class="pf-filter-chips">
+            <div class="pf-chip active">All</div>
+            <div class="pf-chip">Income</div>
+            <div class="pf-chip">Expenses</div>
+            <div class="pf-chip">Pending</div>
+          </div>
+          <div class="pf-search">🔍 Search transactions</div>
+          <div class="pf-date-group">Today</div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#FFF3E0;">🛒</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">Migros Stadelhofen</div><div class="pf-tx-date">14:23 · Groceries</div></div>
+            <div class="pf-tx-amount negative">-CHF 47.50</div>
+          </div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#E3F2FD;">🚂</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">SBB Mobile</div><div class="pf-tx-date">08:15 · Transport</div></div>
+            <div class="pf-tx-amount negative">-CHF 32.00</div>
+          </div>
+          <div class="pf-date-group">May 1</div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#E8F5E9;">💰</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">Salary — Employer AG</div><div class="pf-tx-date">06:00 · Income</div></div>
+            <div class="pf-tx-amount positive">+CHF 7'850.00</div>
+          </div>
+          <div class="pf-date-group">April 30</div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#FFF3E0;">☕</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">Starbucks Paradeplatz</div><div class="pf-tx-date">16:42 · Dining</div></div>
+            <div class="pf-tx-amount negative">-CHF 6.80</div>
+          </div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#F3E5F5;">🏠</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">Rent — Wohnbau AG</div><div class="pf-tx-date">00:00 · Housing</div></div>
+            <div class="pf-tx-amount negative">-CHF 1'850.00</div>
+          </div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#E0F7FA;">⚡</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">Sunrise Telecom</div><div class="pf-tx-date">00:00 · Bills</div></div>
+            <div class="pf-tx-amount negative">-CHF 79.00</div>
+          </div>
+          <div style="height: 80px;"></div>
+        </div>
+        <div class="phone-tab-bar">
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3L4 9v12h5v-7h6v7h5V9z"/></svg><span>Home</span></div>
+          <div class="tab-item active"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20" fill="none" stroke="#FFCC00" stroke-width="1"/></svg><span>Accounts</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>Pay</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="4 18 8 10 12 14 16 6 20 10"/></svg><span>Invest</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span>More</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Account Detail</div>
+    <div class="screen-sublabel">Transaction history + filters</div>
+  </div>
+
+  <!-- FLOW ARROW -->
+  <div class="h-connector" style="left: 1355px; top: 400px; width: 50px;"></div>
+
+  <!-- SCREEN 3: PAYMENT FORM -->
+  <div class="canvas-node" style="left: 1420px; top: 100px;">
+    <div class="iphone-frame" onclick="openPhone('payment')">
+      <div class="iphone-screen">
+        <div class="dynamic-island"></div>
+        <div class="screen-content">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="icons">
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="#1A1A1A" stroke-width="1.2" fill="none"/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill="#1A1A1A"/></svg>
+            </div>
+          </div>
+          <div style="padding:4px 20px 0;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:18px;color:#999;">←</span>
+            <span style="font-size:14px;color:#999;">Cancel</span>
+          </div>
+          <div class="pf-large-title">New Payment</div>
+          <div class="pf-form-section">
+            <div class="pf-input-label">From</div>
+            <div style="background:#F8F8F8;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:14px;font-weight:600;color:#1A1A1A;">Private Account</div>
+                <div style="font-size:12px;color:#999;font-family:'JetBrains Mono',monospace;">CHF 12'450.00</div>
+              </div>
+              <span style="color:#CCC;">▼</span>
+            </div>
+          </div>
+          <div class="pf-form-section">
+            <div class="pf-input-label">To (IBAN)</div>
+            <input class="pf-input" value="CH93 0076 2011 6238 5295 7" readonly style="font-family:'JetBrains Mono',monospace;font-size:13px;border-color:#FFCC00;">
+            <div style="font-size:11px;color:var(--pf-success);margin-top:4px;font-weight:500;">✓ Sunrise Communications AG</div>
+          </div>
+          <div style="text-align:center;padding:8px 0;">
+            <div style="font-size:12px;color:#999;margin-bottom:4px;">Amount</div>
+            <div class="pf-amount-input" style="display:block;">CHF 245.00</div>
+          </div>
+          <div class="pf-form-section">
+            <div class="pf-input-label">Reference</div>
+            <input class="pf-input" value="Invoice #2026-0487" readonly style="font-size:13px;">
+          </div>
+          <div class="pf-form-section">
+            <div class="pf-input-label">Date</div>
+            <div style="background:#F8F8F8;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:14px;color:#1A1A1A;">Today, May 3</span>
+              <span style="font-size:16px;">📅</span>
+            </div>
+          </div>
+          <button class="pf-cta" style="margin-top:16px;">Review Payment</button>
+        </div>
+        <div class="phone-tab-bar">
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3L4 9v12h5v-7h6v7h5V9z"/></svg><span>Home</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/></svg><span>Accounts</span></div>
+          <div class="tab-item active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>Pay</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="4 18 8 10 12 14 16 6 20 10"/></svg><span>Invest</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span>More</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Payment Form</div>
+    <div class="screen-sublabel">IBAN + amount entry</div>
+  </div>
+
+  <!-- FLOW ARROW -->
+  <div class="h-connector" style="left: 1715px; top: 400px; width: 50px;"></div>
+
+  <!-- SCREEN 4: CARDS -->
+  <div class="canvas-node" style="left: 1780px; top: 100px;">
+    <div class="iphone-frame" onclick="openPhone('cards')">
+      <div class="iphone-screen">
+        <div class="dynamic-island"></div>
+        <div class="screen-content">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="icons">
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="#1A1A1A" stroke-width="1.2" fill="none"/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill="#1A1A1A"/></svg>
+            </div>
+          </div>
+          <div class="pf-large-title">My Cards</div>
+          <div class="pf-card-visual">
+            <div class="card-logo">POSTFINANCE</div>
+            <div class="card-number">•••• •••• •••• 4521</div>
+            <div class="card-holder">SARAH BRUNNER</div>
+            <div class="card-expiry">12/28</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:0 20px;margin-bottom:16px;">
+            <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(0,182,122,0.1);border-radius:20px;font-size:12px;font-weight:600;color:#00B67A;">● Active</div>
+            <div style="font-size:13px;color:#999;">Debit Mastercard</div>
+          </div>
+          <div class="pf-toggles">
+            <div class="pf-toggle-item">
+              <div class="t-icon">📶</div>
+              <div class="t-label">Contactless</div>
+              <div class="t-status on">ON</div>
+            </div>
+            <div class="pf-toggle-item">
+              <div class="t-icon">🌐</div>
+              <div class="t-label">Online</div>
+              <div class="t-status on">ON</div>
+            </div>
+            <div class="pf-toggle-item">
+              <div class="t-icon">🏧</div>
+              <div class="t-label">ATM</div>
+              <div class="t-status on">ON</div>
+            </div>
+          </div>
+          <div class="pf-section-header"><h3>Spending Limit</h3></div>
+          <div style="padding:0 20px;margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+              <span style="color:#666;">CHF 1'840 spent</span>
+              <span style="color:#999;">CHF 5'000 limit</span>
+            </div>
+            <div style="height:6px;background:#F0F0F0;border-radius:3px;overflow:hidden;">
+              <div style="width:37%;height:100%;background:var(--pf-yellow);border-radius:3px;"></div>
+            </div>
+          </div>
+          <div class="pf-section-header"><h3>Recent</h3><a href="#">See all</a></div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#FFF3E0;">🛒</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">Migros</div><div class="pf-tx-date">Today · Card</div></div>
+            <div class="pf-tx-amount negative">-CHF 47.50</div>
+          </div>
+          <div class="pf-tx-row">
+            <div class="pf-tx-icon" style="background:#E3F2FD;">🚂</div>
+            <div class="pf-tx-info"><div class="pf-tx-name">SBB</div><div class="pf-tx-date">Today · Card</div></div>
+            <div class="pf-tx-amount negative">-CHF 32.00</div>
+          </div>
+          <div style="padding:12px 20px;">
+            <div style="display:flex;gap:8px;">
+              <div style="flex:1;height:48px;background:#1A1A1A;border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:600;">Freeze Card</div>
+              <div style="flex:1;height:48px;border:1.5px solid #E0E0E0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#1A1A1A;">Settings</div>
+            </div>
+          </div>
+          <div style="height: 80px;"></div>
+        </div>
+        <div class="phone-tab-bar">
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3L4 9v12h5v-7h6v7h5V9z"/></svg><span>Home</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/></svg><span>Accounts</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>Pay</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="4 18 8 10 12 14 16 6 20 10"/></svg><span>Invest</span></div>
+          <div class="tab-item active"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span>More</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Cards</div>
+    <div class="screen-sublabel">Card controls + spending</div>
+  </div>
+
+  <!-- FLOW ARROW -->
+  <div class="h-connector" style="left: 2075px; top: 400px; width: 50px;"></div>
+
+  <!-- SCREEN 5: INVESTMENTS -->
+  <div class="canvas-node" style="left: 2140px; top: 100px;">
+    <div class="iphone-frame" onclick="openPhone('invest')">
+      <div class="iphone-screen">
+        <div class="dynamic-island"></div>
+        <div class="screen-content">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="icons">
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="#1A1A1A" stroke-width="1.2" fill="none"/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill="#1A1A1A"/></svg>
+            </div>
+          </div>
+          <div class="pf-large-title">Investments</div>
+          <div class="pf-portfolio-value">
+            <div class="pv-label">Total Portfolio</div>
+            <div class="pv-amount">CHF 45'320</div>
+            <div class="pv-change">▲ +2.4% (+CHF 1'064)</div>
+          </div>
+          <div class="pf-chart-placeholder">
+            <svg width="100%" height="100%" viewBox="0 0 240 120" preserveAspectRatio="none">
+              <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFCC00" stop-opacity="0.2"/><stop offset="100%" stop-color="#FFCC00" stop-opacity="0"/></linearGradient></defs>
+              <path d="M0 90 L20 80 L40 85 L60 70 L80 75 L100 55 L120 60 L140 40 L160 45 L180 30 L200 35 L220 20 L240 25 L240 120 L0 120Z" fill="url(#chartGrad)"/>
+              <path d="M0 90 L20 80 L40 85 L60 70 L80 75 L100 55 L120 60 L140 40 L160 45 L180 30 L200 35 L220 20 L240 25" stroke="#FFCC00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="pf-time-pills">
+            <div class="pf-pill">1D</div>
+            <div class="pf-pill">1W</div>
+            <div class="pf-pill active">1M</div>
+            <div class="pf-pill">3M</div>
+            <div class="pf-pill">1Y</div>
+            <div class="pf-pill">ALL</div>
+          </div>
+          <div class="pf-section-header"><h3>Allocation</h3></div>
+          <div style="padding:0 20px;margin-bottom:12px;">
+            <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;">
+              <div style="width:45%;background:#FFCC00;"></div>
+              <div style="width:30%;background:#1A1A1A;"></div>
+              <div style="width:15%;background:#00B67A;"></div>
+              <div style="width:10%;background:#2196F3;"></div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:#666;">
+              <span>● Equities 45%</span>
+              <span style="color:#1A1A1A;">● Bonds 30%</span>
+              <span style="color:#00B67A;">● Cash 15%</span>
+              <span style="color:#2196F3;">● RE 10%</span>
+            </div>
+          </div>
+          <div class="pf-section-header"><h3>Savings Goals</h3><a href="#">See all</a></div>
+          <div style="display:flex;gap:10px;padding:0 20px 12px;overflow-x:auto;">
+            <div style="flex-shrink:0;width:150px;background:#F8F8F8;border-radius:14px;padding:14px;">
+              <div style="font-size:12px;font-weight:600;color:#1A1A1A;">New Camera</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                <svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="#E0E0E0" stroke-width="3.5"/><circle cx="18" cy="18" r="15" fill="none" stroke="#FFCC00" stroke-width="3.5" stroke-dasharray="57.5 94" stroke-linecap="round" transform="rotate(-90 18 18)"/><text x="18" y="21" text-anchor="middle" font-size="9" font-weight="700" fill="#1A1A1A">61%</text></svg>
+                <div><div style="font-size:14px;font-weight:700;color:#1A1A1A;font-family:'JetBrains Mono',monospace;">CHF 915</div><div style="font-size:10px;color:#999;">of 1'500</div></div>
+              </div>
+            </div>
+            <div style="flex-shrink:0;width:150px;background:#F8F8F8;border-radius:14px;padding:14px;">
+              <div style="font-size:12px;font-weight:600;color:#1A1A1A;">Vacation 2026</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                <svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="#E0E0E0" stroke-width="3.5"/><circle cx="18" cy="18" r="15" fill="none" stroke="#00B67A" stroke-width="3.5" stroke-dasharray="35.8 94" stroke-linecap="round" transform="rotate(-90 18 18)"/><text x="18" y="21" text-anchor="middle" font-size="9" font-weight="700" fill="#1A1A1A">38%</text></svg>
+                <div><div style="font-size:14px;font-weight:700;color:#1A1A1A;font-family:'JetBrains Mono',monospace;">CHF 1'900</div><div style="font-size:10px;color:#999;">of 5'000</div></div>
+              </div>
+            </div>
+          </div>
+          <div style="padding:0 20px 100px;">
+            <div style="display:flex;gap:8px;">
+              <button class="pf-cta" style="margin:0;flex:1;font-family:inherit;">Buy</button>
+              <div style="flex:1;height:52px;border:1.5px solid #E0E0E0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#1A1A1A;">Sell</div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-tab-bar">
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3L4 9v12h5v-7h6v7h5V9z"/></svg><span>Home</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/></svg><span>Accounts</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>Pay</span></div>
+          <div class="tab-item active"><svg viewBox="0 0 24 24" fill="currentColor"><polyline points="4 18 8 10 12 14 16 6 20 10" stroke="#FFCC00" stroke-width="2" fill="none"/></svg><span>Invest</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span>More</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Investments</div>
+    <div class="screen-sublabel">Portfolio + savings goals</div>
+  </div>
+
+  <!-- FLOW ARROW -->
+  <div class="h-connector" style="left: 2435px; top: 400px; width: 50px;"></div>
+
+  <!-- SCREEN 6: PROFILE -->
+  <div class="canvas-node" style="left: 2500px; top: 100px;">
+    <div class="iphone-frame" onclick="openPhone('profile')">
+      <div class="iphone-screen">
+        <div class="dynamic-island"></div>
+        <div class="screen-content">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="icons">
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="#1A1A1A" stroke-width="1.2" fill="none"/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill="#1A1A1A"/></svg>
+            </div>
+          </div>
+          <div class="pf-large-title">Profile</div>
+          <div class="pf-profile-header">
+            <div class="pf-avatar">SB</div>
+            <div class="pf-profile-name">Sarah Brunner</div>
+            <div class="pf-profile-acct">85-123456-7</div>
+          </div>
+          <div class="pf-settings-group">
+            <div class="pf-settings-item"><div class="si-icon">🔐</div><span class="si-label">Face ID</span><span class="si-value" style="color:var(--pf-success);">Enabled</span><span class="si-arrow">›</span></div>
+            <div class="pf-settings-item"><div class="si-icon">🔑</div><span class="si-label">Change PIN</span><span class="si-arrow">›</span></div>
+            <div class="pf-settings-item"><div class="si-icon">📱</div><span class="si-label">Active Sessions</span><span class="si-value">2 devices</span><span class="si-arrow">›</span></div>
+          </div>
+          <div class="pf-settings-group">
+            <div class="pf-settings-item"><div class="si-icon">🔔</div><span class="si-label">Notifications</span><span class="si-arrow">›</span></div>
+            <div class="pf-settings-item"><div class="si-icon">🎨</div><span class="si-label">Appearance</span><span class="si-value">Light</span><span class="si-arrow">›</span></div>
+            <div class="pf-settings-item"><div class="si-icon">🌍</div><span class="si-label">Language</span><span class="si-value">Deutsch</span><span class="si-arrow">›</span></div>
+          </div>
+          <div class="pf-settings-group">
+            <div class="pf-settings-item"><div class="si-icon">💬</div><span class="si-label">Support Chat</span><span class="si-arrow">›</span></div>
+            <div class="pf-settings-item"><div class="si-icon">❓</div><span class="si-label">FAQ</span><span class="si-arrow">›</span></div>
+            <div class="pf-settings-item"><div class="si-icon">📍</div><span class="si-label">Branch Finder</span><span class="si-arrow">›</span></div>
+          </div>
+          <div style="padding:12px 20px 100px;">
+            <div style="height:48px;background:rgba(229,57,53,0.08);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#E53935;">Log Out</div>
+          </div>
+        </div>
+        <div class="phone-tab-bar">
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3L4 9v12h5v-7h6v7h5V9z"/></svg><span>Home</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/></svg><span>Accounts</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>Pay</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="4 18 8 10 12 14 16 6 20 10"/></svg><span>Invest</span></div>
+          <div class="tab-item active"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span>More</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Profile & Settings</div>
+    <div class="screen-sublabel">Security, preferences, support</div>
+  </div>
+
+  <!-- ==================== PAYMENT FLOW ROW ==================== -->
+  <div class="section-label" style="left: 700px; top: 760px;">Payment Flow</div>
+
+  <!-- Payment Success Screen -->
+  <div class="canvas-node" style="left: 700px; top: 800px;">
+    <div class="iphone-frame" onclick="openPhone('success')">
+      <div class="iphone-screen">
+        <div class="dynamic-island"></div>
+        <div class="screen-content">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="icons">
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="#1A1A1A" stroke-width="1.2" fill="none"/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill="#1A1A1A"/></svg>
+            </div>
+          </div>
+          <div class="pf-success-screen">
+            <div class="pf-success-check">✓</div>
+            <div class="pf-success-title">Payment Sent</div>
+            <div class="pf-success-amount">CHF 245.00</div>
+            <div class="pf-success-to">to Sunrise Communications AG</div>
+            <div class="pf-success-details">
+              <div class="pf-success-row"><span class="label">Reference</span><span class="value">Invoice #2026-0487</span></div>
+              <div class="pf-success-row"><span class="label">Date</span><span class="value">May 3, 2026</span></div>
+              <div class="pf-success-row"><span class="label">From</span><span class="value">Private Account</span></div>
+              <div class="pf-success-row"><span class="label">Fee</span><span class="value" style="color:#00B67A">Free</span></div>
+            </div>
+            <div style="width:100%;display:flex;flex-direction:column;gap:8px;">
+              <button class="pf-cta" style="margin:0;width:100%;">Done</button>
+              <div style="height:48px;border:1.5px solid #E0E0E0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#1A1A1A;">Share Receipt</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Payment Success</div>
+    <div class="screen-sublabel">Confirmation + receipt</div>
+  </div>
+
+  <!-- Flow annotation: Payment form → Success -->
+  <div class="annotation" style="left: 1000px; top: 870px;">
+    <div class="ann-title">Flow Detail</div>
+    <div class="ann-body">Payment Form → Review & Confirm (biometric auth via Face ID) → Success screen with haptic feedback</div>
+  </div>
+
+  <!-- QR Scanner -->
+  <div class="canvas-node" style="left: 1060px; top: 800px;">
+    <div class="iphone-frame" onclick="openPhone('qr')">
+      <div class="iphone-screen" style="background:#000;">
+        <div class="dynamic-island"></div>
+        <div class="screen-content" style="position:relative;">
+          <div class="status-bar" style="color:white;">
+            <span class="time" style="color:white;">9:41</span>
+            <div class="icons">
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="white" stroke-width="1.2" fill="none"/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill="white"/></svg>
+            </div>
+          </div>
+          <!-- Camera viewfinder simulation -->
+          <div style="height:310px;background:linear-gradient(180deg,#1a1a2e,#16213e);display:flex;align-items:center;justify-content:center;position:relative;">
+            <!-- Scan frame -->
+            <div style="width:180px;height:180px;position:relative;">
+              <div style="position:absolute;top:0;left:0;width:30px;height:30px;border-top:3px solid #FFCC00;border-left:3px solid #FFCC00;border-radius:4px 0 0 0;"></div>
+              <div style="position:absolute;top:0;right:0;width:30px;height:30px;border-top:3px solid #FFCC00;border-right:3px solid #FFCC00;border-radius:0 4px 0 0;"></div>
+              <div style="position:absolute;bottom:0;left:0;width:30px;height:30px;border-bottom:3px solid #FFCC00;border-left:3px solid #FFCC00;border-radius:0 0 0 4px;"></div>
+              <div style="position:absolute;bottom:0;right:0;width:30px;height:30px;border-bottom:3px solid #FFCC00;border-right:3px solid #FFCC00;border-radius:0 0 4px 0;"></div>
+              <!-- Scan line animation -->
+              <div style="position:absolute;top:50%;left:10%;width:80%;height:2px;background:linear-gradient(90deg,transparent,#FFCC00,transparent);opacity:0.6;"></div>
+            </div>
+            <!-- Torch button -->
+            <div style="position:absolute;bottom:16px;right:16px;width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:18px;">💡</span>
+            </div>
+          </div>
+          <!-- Bottom sheet -->
+          <div style="background:white;border-radius:20px 20px 0 0;margin-top:-16px;position:relative;z-index:5;padding:20px;">
+            <div style="width:36px;height:4px;background:#E0E0E0;border-radius:2px;margin:0 auto 16px;"></div>
+            <div style="font-size:18px;font-weight:700;color:#1A1A1A;text-align:center;margin-bottom:8px;">Scan QR-Bill</div>
+            <div style="font-size:13px;color:#999;text-align:center;margin-bottom:20px;">Position the QR code within the frame</div>
+            <div style="text-align:center;">
+              <span style="font-size:14px;color:#FFCC00;font-weight:600;cursor:pointer;">Enter manually instead</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">QR-Bill Scanner</div>
+    <div class="screen-sublabel">Camera + auto-fill</div>
+  </div>
+
+  <!-- Standing Orders -->
+  <div class="canvas-node" style="left: 1420px; top: 800px;">
+    <div class="iphone-frame" onclick="openPhone('standing')">
+      <div class="iphone-screen">
+        <div class="dynamic-island"></div>
+        <div class="screen-content">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="icons">
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="#1A1A1A" stroke-width="1.2" fill="none"/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill="#1A1A1A"/></svg>
+            </div>
+          </div>
+          <div style="padding:4px 20px 0;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:18px;color:#999;">←</span>
+            <span style="font-size:24px;color:#1A1A1A;font-weight:300;">+</span>
+          </div>
+          <div class="pf-large-title">Standing Orders</div>
+          <div class="pf-tx-row" style="background:#F8F8F8;margin:0 20px;border-radius:14px 14px 0 0;padding:14px;">
+            <div class="pf-tx-icon" style="background:#F3E5F5;">🏠</div>
+            <div class="pf-tx-info">
+              <div class="pf-tx-name">Rent — Wohnbau AG</div>
+              <div class="pf-tx-date">Monthly · 1st · <span style="color:#00B67A;font-weight:600;">Active</span></div>
+            </div>
+            <div class="pf-tx-amount negative" style="font-size:15px;">CHF 1'850</div>
+          </div>
+          <div class="pf-tx-row" style="background:#F8F8F8;margin:0 20px;padding:14px;">
+            <div class="pf-tx-icon" style="background:#E8F5E9;">🏥</div>
+            <div class="pf-tx-info">
+              <div class="pf-tx-name">CSS Health Insurance</div>
+              <div class="pf-tx-date">Monthly · 15th · <span style="color:#00B67A;font-weight:600;">Active</span></div>
+            </div>
+            <div class="pf-tx-amount negative" style="font-size:15px;">CHF 380</div>
+          </div>
+          <div class="pf-tx-row" style="background:#F8F8F8;margin:0 20px;padding:14px;">
+            <div class="pf-tx-icon" style="background:#E8F5E9;">🎵</div>
+            <div class="pf-tx-info">
+              <div class="pf-tx-name">Spotify</div>
+              <div class="pf-tx-date">Monthly · 5th · <span style="color:#00B67A;font-weight:600;">Active</span></div>
+            </div>
+            <div class="pf-tx-amount negative" style="font-size:15px;">CHF 12.90</div>
+          </div>
+          <div class="pf-tx-row" style="background:#F8F8F8;margin:0 20px;border-radius:0 0 14px 14px;padding:14px;">
+            <div class="pf-tx-icon" style="background:#FFF3E0;">⚡</div>
+            <div class="pf-tx-info">
+              <div class="pf-tx-name">Sunrise Telecom</div>
+              <div class="pf-tx-date">Monthly · 20th · <span style="color:#FF9800;font-weight:600;">Paused</span></div>
+            </div>
+            <div class="pf-tx-amount negative" style="font-size:15px;opacity:0.5;">CHF 79.00</div>
+          </div>
+          <div style="padding:20px;text-align:center;">
+            <div style="font-size:13px;color:#999;">Swipe left on an order to pause or delete</div>
+          </div>
+          <div style="height: 80px;"></div>
+        </div>
+        <div class="phone-tab-bar">
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3L4 9v12h5v-7h6v7h5V9z"/></svg><span>Home</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="3"/></svg><span>Accounts</span></div>
+          <div class="tab-item active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span>Pay</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="4 18 8 10 12 14 16 6 20 10"/></svg><span>Invest</span></div>
+          <div class="tab-item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span>More</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">Standing Orders</div>
+    <div class="screen-sublabel">Recurring payments</div>
+  </div>
+
+  <!-- ==================== NATIVE INTERACTION PATTERNS ==================== -->
+  <div class="section-label" style="left: 700px; top: 1510px;">Native Interaction Patterns</div>
+
+  <div class="canvas-node pattern-card" style="left: 700px; top: 1550px;">
+    <div class="pattern-icon">👆</div>
+    <h3>Bottom Sheets</h3>
+    <p>Half-height and full-height detents for filters, confirmations, and quick actions. Spring animation with 0.85 damping. 20px top corner radius with 36×5px grab handle.</p>
+  </div>
+
+  <div class="canvas-node pattern-card" style="left: 960px; top: 1550px;">
+    <div class="pattern-icon">👈</div>
+    <h3>Swipe Actions</h3>
+    <p>Leading swipe on transactions for quick pay/repeat. Trailing swipe on notifications to archive. Destructive actions require confirmation with haptic warning.</p>
+  </div>
+
+  <div class="canvas-node pattern-card" style="left: 1220px; top: 1550px;">
+    <div class="pattern-icon">📱</div>
+    <h3>Haptic Feedback</h3>
+    <p>Success haptic on payment confirmation. Warning haptic on card freeze. Selection haptic on amount picker taps. Impact haptic on pull-to-refresh trigger.</p>
+  </div>
+
+  <div class="canvas-node pattern-card" style="left: 1480px; top: 1550px;">
+    <div class="pattern-icon">🔍</div>
+    <h3>Long Press Menus</h3>
+    <p>Context menus on account cards (copy IBAN, share, rename). Transaction long press for quick categorize, add note, report. Uses SF Symbols for menu icons.</p>
+  </div>
+
+  <div class="canvas-node pattern-card" style="left: 1740px; top: 1550px;">
+    <div class="pattern-icon">✨</div>
+    <h3>Micro-animations</h3>
+    <p>Balance count-up on load (600ms ease-out). Card flip for PIN reveal. Confetti on payment success. Progress ring fill on savings goals. Skeleton shimmer during loading.</p>
+  </div>
+
+  <div class="canvas-node pattern-card" style="left: 2000px; top: 1550px;">
+    <div class="pattern-icon">🏝️</div>
+    <h3>Dynamic Island</h3>
+    <p>Payment progress indicator during transfer. Live activity for pending transactions. Compact view shows transfer amount, expanded shows full status with recipient.</p>
+  </div>
+
+  <!-- ==================== DEV HANDOVER SECTION ==================== -->
+  <div class="section-label" style="left: 700px; top: 1830px;">Design → Dev Handover</div>
+
+  <div class="canvas-node doc-card wide" style="left: 700px; top: 1870px;">
+    <div class="subtitle">Engineering Specs</div>
+    <h2>Implementation Notes</h2>
+    <ul>
+      <li><strong>SwiftUI preferred</strong> — UIKit for complex list animations and custom transitions only</li>
+      <li><strong>NavigationStack</strong> with typed paths for deep linking support</li>
+      <li><strong>@Observable macro</strong> for state management (iOS 17+)</li>
+      <li><strong>Async/await</strong> for all network calls via structured concurrency</li>
+      <li><strong>Keychain</strong> for biometric token storage via LocalAuthentication</li>
+      <li><strong>Core Data + CloudKit</strong> for offline transaction cache</li>
+      <li><strong>AVFoundation</strong> for QR code scanning with VNDetectBarcodesRequest</li>
+    </ul>
+    <div style="margin-top:16px;">
+      <span class="tag yellow">iOS 16+</span>
+      <span class="tag gray">Swift 5.9</span>
+      <span class="tag gray">Xcode 15</span>
+      <span class="tag blue">SwiftUI</span>
+      <span class="tag green">Accessibility</span>
+    </div>
+  </div>
+
+  <div class="canvas-node doc-card" style="left: 1260px; top: 1870px;">
+    <div class="subtitle">Accessibility</div>
+    <h2>WCAG 2.1 AA</h2>
+    <ul>
+      <li>All contrast ratios ≥ 4.5:1 verified</li>
+      <li>Touch targets minimum 44×44pt</li>
+      <li>VoiceOver labels on every interactive element</li>
+      <li>Dynamic Type support (up to xxxLarge)</li>
+      <li>Reduce Motion: disable sparklines, count-up, confetti</li>
+      <li>Color-blind safe: never rely on color alone for status</li>
+    </ul>
+  </div>
+
+  <div class="canvas-node doc-card" style="left: 1680px; top: 1870px;">
+    <div class="subtitle">Localization</div>
+    <h2>4-Language Support</h2>
+    <p>All strings externalized to .strings files. RTL not required. Number formatting uses Swiss locale (apostrophe thousands separator).</p>
+    <div style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2;color:var(--text-secondary);">
+      🇩🇪 Deutsch (primary)<br>
+      🇫🇷 Français<br>
+      🇮🇹 Italiano<br>
+      🇬🇧 English
+    </div>
+  </div>
+
+  <!-- ==================== PROCESS / HOW WE GOT HERE ==================== -->
+  <div class="section-label" style="left: 2200px; top: 760px;">The Process</div>
+
+  <div class="canvas-node doc-card" style="left: 2200px; top: 800px;">
+    <div class="subtitle">Step 1</div>
+    <h2>Claude Cowork — PRD</h2>
+    <p>Started with Claude Cowork to generate a comprehensive PRD covering all banking app features. Defined 20 screens, 7 user flows, and 45 components.</p>
+    <div style="margin-top:12px;">
+      <span class="tag blue">Product Requirements</span>
+      <span class="tag gray">Information Architecture</span>
+    </div>
+  </div>
+
+  <div class="canvas-node doc-card" style="left: 2200px; top: 1080px;">
+    <div class="subtitle">Step 2</div>
+    <h2>Design System Definition</h2>
+    <p>Extracted PostFinance brand guidelines into a structured design system: color tokens, typography scale, spacing system, component specs, motion guidelines.</p>
+    <div class="color-row" style="margin-top:12px;">
+      <div class="color-swatch" style="background: #FFCC00; width:28px; height:28px;"></div>
+      <div class="color-swatch" style="background: #1A1A1A; width:28px; height:28px;"></div>
+      <div class="color-swatch" style="background: #F8F8F8; width:28px; height:28px;"></div>
+      <div class="color-swatch" style="background: #00B67A; width:28px; height:28px;"></div>
+    </div>
+  </div>
+
+  <div class="canvas-node doc-card" style="left: 2200px; top: 1340px;">
+    <div class="subtitle">Step 3</div>
+    <h2>Claude Design — Screens</h2>
+    <p>Fed the PRD and style guide into Claude Design (Magic Patterns) to generate all core screens and secondary flows. Iterated on each screen for pixel-perfect results.</p>
+    <div style="margin-top:12px;">
+      <span class="tag yellow">7 Core Screens</span>
+      <span class="tag green">7 Flow Screens</span>
+    </div>
+  </div>
+
+  <div class="canvas-node doc-card" style="left: 2200px; top: 1590px;">
+    <div class="subtitle">Step 4</div>
+    <h2>Interactive Canvas</h2>
+    <p>Built this interactive portfolio case study as a pannable canvas with clickable iPhone mockups, documentation cards, and design-to-dev handover specs.</p>
+    <div style="margin-top:12px;">
+      <span class="tag yellow">Portfolio</span>
+      <span class="tag blue">Handover</span>
+      <span class="tag gray">Documentation</span>
+    </div>
+  </div>
+
+</div><!-- end canvas -->
+
+<!-- Phone Modal -->
+<div id="phone-modal">
+  <div class="modal-phone">
+    <button class="close-modal" onclick="closePhone()">✕</button>
+    <div class="iphone-screen" id="modal-screen">
+      <div class="dynamic-island"></div>
+      <!-- Content injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Keyboard shortcuts -->
+<div id="shortcuts">
+  <div class="shortcut"><kbd>Scroll</kbd> Zoom</div>
+  <div class="shortcut"><kbd>Drag</kbd> Pan</div>
+  <div class="shortcut"><kbd>Click</kbd> Open screen</div>
+  <div class="shortcut"><kbd>R</kbd> Reset view</div>
+</div>
+
+<script>
+  // ==================== CANVAS PANNING & ZOOMING ====================
+  const canvas = document.getElementById('canvas');
+  let scale = 0.55;
+  let panX = -200;
+  let panY = -20;
+  let isDragging = false;
+  let startX, startY;
+
+  function updateTransform() {
+    canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    document.getElementById('zoom-level').textContent = Math.round(scale * 100) + '%';
+  }
+
+  // Initial transform
+  updateTransform();
+
+  // Mouse drag for panning
+  document.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.iphone-frame') || e.target.closest('#topbar') || e.target.closest('#toc') || e.target.closest('#toc-toggle') || e.target.closest('#phone-modal') || e.target.closest('.zoom-btn') || e.target.closest('#shortcuts') || e.target.closest('#minimap')) return;
+    isDragging = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    document.body.classList.add('grabbing');
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    panX = e.clientX - startX;
+    panY = e.clientY - startY;
+    updateTransform();
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    document.body.classList.remove('grabbing');
+  });
+
+  // Scroll to zoom
+  document.addEventListener('wheel', (e) => {
+    if (e.target.closest('#toc') || e.target.closest('#phone-modal')) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.95 : 1.05;
+    const newScale = Math.max(0.15, Math.min(2, scale * delta));
+    
+    // Zoom toward cursor
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
+    
+    panX -= x * (newScale - scale);
+    panY -= y * (newScale - scale);
+    scale = newScale;
+    
+    updateTransform();
+  }, { passive: false });
+
+  // Zoom buttons
+  function zoomIn() { scale = Math.min(2, scale * 1.2); updateTransform(); }
+  function zoomOut() { scale = Math.max(0.15, scale * 0.8); updateTransform(); }
+  function resetView() { scale = 0.55; panX = -200; panY = -20; updateTransform(); }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'r' || e.key === 'R') resetView();
+    if (e.key === 'Escape') closePhone();
+    if (e.key === '+' || e.key === '=') zoomIn();
+    if (e.key === '-') zoomOut();
+  });
+
+  // ==================== TOC ====================
+  function toggleTOC() {
+    document.getElementById('toc').classList.toggle('open');
+  }
+
+  function navigateTo(x, y) {
+    panX = -x * scale + window.innerWidth / 2;
+    panY = -y * scale + window.innerHeight / 2;
+    updateTransform();
+    document.getElementById('toc').classList.remove('open');
+  }
+
+  // ==================== PHONE MODAL ====================
+  function openPhone(screen) {
+    const modal = document.getElementById('phone-modal');
+    const modalScreen = document.getElementById('modal-screen');
+    
+    // Clone the screen content
+    let sourceId;
+    switch(screen) {
+      case 'home': sourceId = 'screen-home'; break;
+      default: sourceId = 'screen-home';
+    }
+    
+    // Find the clicked phone's screen content
+    const clickedFrame = event.currentTarget;
+    const sourceScreen = clickedFrame.querySelector('.iphone-screen');
+    
+    // Clone the entire content
+    modalScreen.innerHTML = sourceScreen.innerHTML;
+    
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('visible'), 10);
+  }
+
+  function closePhone() {
+    const modal = document.getElementById('phone-modal');
+    modal.classList.remove('visible');
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+  }
+
+  // Close modal on background click
+  document.getElementById('phone-modal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('phone-modal')) closePhone();
+  });
+
+  // ==================== TOUCH SUPPORT ====================
+  let lastTouchDist = 0;
+  let lastTouchX = 0;
+  let lastTouchY = 0;
+
+  document.addEventListener('touchstart', (e) => {
+    if (e.target.closest('#topbar') || e.target.closest('#toc') || e.target.closest('#phone-modal')) return;
+    if (e.touches.length === 1) {
+      isDragging = true;
+      startX = e.touches[0].clientX - panX;
+      startY = e.touches[0].clientY - panY;
+    } else if (e.touches.length === 2) {
+      isDragging = false;
+      lastTouchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchmove', (e) => {
+    if (e.target.closest('#toc') || e.target.closest('#phone-modal')) return;
+    e.preventDefault();
+    if (e.touches.length === 1 && isDragging) {
+      panX = e.touches[0].clientX - startX;
+      panY = e.touches[0].clientY - startY;
+      updateTransform();
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      const delta = dist / lastTouchDist;
+      scale = Math.max(0.15, Math.min(2, scale * delta));
+      lastTouchDist = dist;
+      updateTransform();
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => { isDragging = false; });
+</script>
+</body>
+</html>
