@@ -465,12 +465,19 @@ export function ScreenInvest() {
         display: "flex",
         flexDirection: "column",
         paddingTop: 44,
-        paddingBottom: 84,
         fontFamily: pfFont,
         color: PF.fg1,
         fontWeight: 300,
       }}
     >
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          paddingBottom: 84,
+        }}
+      >
       <div style={{ height: 12 }} />
       {/* HERO — investment & retirement total + allocation (swipeable) */}
       <div
@@ -565,7 +572,7 @@ export function ScreenInvest() {
               width: "200%",
               transform: `translateX(calc(${-page * 50}% + ${dragX}px))`,
               transition: dragging ? "none" : `transform 420ms ${spring}`,
-              minHeight: 232,
+              minHeight: 190,
             }}
           >
             {/* Page 1 — balance, performance, actions */}
@@ -598,7 +605,7 @@ export function ScreenInvest() {
 
               <button
                 style={{
-                  marginTop: 24,
+                  marginTop: 16,
                   width: "100%",
                   display: "inline-flex",
                   alignItems: "center",
@@ -961,6 +968,8 @@ export function ScreenInvest() {
         >
           Learn more <Icon name="chevron" size={11} color={PF.petrol9} stroke={1.8} />
         </span>
+      </div>
+
       </div>
 
       {/* Backdrop when section tray is open */}
@@ -1618,7 +1627,7 @@ export function ScreenInvest() {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  padding: "12px 20px 20px",
+                  padding: "12px 20px 36px",
                   background:
                     "linear-gradient(to top, rgba(255,255,255,1) 70%, rgba(255,255,255,0))",
                   display: "flex",
