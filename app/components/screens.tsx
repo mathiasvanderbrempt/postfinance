@@ -745,14 +745,26 @@ export function ScreenLogin() {
       }}
     >
       <div>
-        <img
-          src="/brand/postfinance-logo-gelb.svg"
-          height={28}
-          alt="PostFinance"
-          style={{
-            display: "block",
-          }}
-        />
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img
+            src="/brand/postfinance-mark.svg"
+            width={32}
+            height={32}
+            alt=""
+            style={{ borderRadius: 8 }}
+          />
+          <span
+            style={{
+              fontSize: 20,
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+              color: PF.white,
+              lineHeight: 1,
+            }}
+          >
+            PostFinance
+          </span>
+        </div>
         <div
           style={{
             fontSize: 36,
