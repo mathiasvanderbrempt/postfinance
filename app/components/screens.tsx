@@ -223,13 +223,156 @@ export function ScreenPay() {
 }
 
 /* ─── INVEST ──────────────────────────────────────────────────────── */
-type Holding = { name: string; tag: string; amount: string; change: string };
+type ItemIconKind = "tree" | "globe" | "card";
+type Holding = {
+  iconKind: ItemIconKind;
+  name: string;
+  pillLabel: string;
+  pillDot?: boolean;
+  pillIcon?: string;
+  amount: string;
+  changePct: string;
+  spark: string; // SVG path d
+};
+type SectionIconKind = "funds" | "managed" | "trading";
 type Portfolio = {
+  sectionIcon: SectionIconKind;
   title: string;
-  total?: string;
-  details?: boolean;
+  count: string;
+  total: string;
+  ytdPct: string;
   items: Holding[];
 };
+
+function SectionIcon({ kind }: { kind: SectionIconKind }) {
+  return (
+    <div
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        background: PF.petrol9,
+        flex: "0 0 auto",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+        {kind === "funds" && (
+          <g>
+            <path d="M2 5v14h20" stroke="rgba(255,255,255,.35)" strokeWidth="1.4" strokeLinecap="round" />
+            <rect x="14" y="9" width="2.6" height="7" rx="0.6" fill={PF.gelb} />
+            <path
+              d="M5 16 L10 11 L13 13.5 L19 7"
+              stroke={PF.white}
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+            <path
+              d="M16 7 L19 7 L19 10"
+              stroke={PF.white}
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </g>
+        )}
+        {kind === "managed" && (
+          <g stroke={PF.white} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+            <circle cx="11" cy="9" r="3.4" />
+            <path d="M4.5 20a6.5 6.5 0 0 1 13 0" />
+            <polygon
+              points="18,3 19.2,5.4 21.8,5.8 19.9,7.6 20.4,10.2 18,9 15.6,10.2 16.1,7.6 14.2,5.8 16.8,5.4"
+              fill={PF.gelb}
+              stroke="none"
+            />
+          </g>
+        )}
+        {kind === "trading" && (
+          <g strokeLinecap="round">
+            <line x1="6" y1="3" x2="6" y2="21" stroke={PF.white} strokeWidth="1.4" />
+            <line x1="12" y1="2.5" x2="12" y2="21.5" stroke={PF.white} strokeWidth="1.4" />
+            <line x1="18" y1="3.5" x2="18" y2="20.5" stroke={PF.gelb} strokeWidth="1.4" />
+            <rect x="4.6" y="7" width="2.8" height="9" rx="0.6" fill={PF.white} opacity={0.85} />
+            <rect x="10.6" y="5" width="2.8" height="11" rx="0.6" fill={PF.white} />
+            <rect x="16.6" y="9" width="2.8" height="8" rx="0.6" fill={PF.gelb} />
+          </g>
+        )}
+      </svg>
+    </div>
+  );
+}
+
+function ItemIcon({ kind }: { kind: ItemIconKind }) {
+  return (
+    <div
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        background: PF.petrol1,
+        flex: "0 0 auto",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {kind === "tree" && (
+        <svg
+          width={22}
+          height={22}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={PF.petrol9}
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="2.5" y="3" width="5" height="3.6" rx="0.8" fill={PF.gelb} stroke="none" />
+          <path d="M5 7v3 M5 10c0 1.5 2 2 4 2.5s4 1 4 3v3 M5 10c0 1.5 2 2 4 2.5s4 1 4 3v3" />
+          <circle cx="13" cy="13.6" r="1.7" />
+          <circle cx="19" cy="9.5" r="1.7" />
+          <circle cx="13" cy="20.5" r="1.7" />
+          <path d="M14.5 12.4 17.5 10.6 M14.4 14.6 17.6 17" />
+          <circle cx="19" cy="18.2" r="1.7" />
+        </svg>
+      )}
+      {kind === "globe" && (
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={PF.petrol9} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18 M12 3a14 14 0 0 1 0 18 M12 3a14 14 0 0 0 0 18" />
+        </svg>
+      )}
+      {kind === "card" && (
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={PF.petrol9} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="6" width="18" height="13" rx="2.4" />
+          <path d="M3 10h18" />
+          <rect x="6" y="14" width="4" height="2.2" rx="0.6" fill={PF.gelb} stroke="none" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
+function MiniSpark({ d, endY }: { d: string; endY: number }) {
+  return (
+    <svg width={56} height={28} viewBox="0 0 56 28" fill="none" aria-hidden>
+      <path
+        d={d}
+        stroke={PF.green}
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <circle cx={52} cy={endY} r={2.2} fill={PF.green} />
+    </svg>
+  );
+}
 
 export function ScreenInvest() {
   const allocation = [
@@ -238,60 +381,68 @@ export function ScreenInvest() {
     { id: "cash", icon: "wallet", label: "Cash", pct: 15 },
   ];
   const accent = "#5EE6B6";
+  const sparkUp = "M2 22 L10 18 L18 20 L26 14 L34 16 L42 9 L52 5";
+  const sparkUpEndY = 5;
   const portfolios: Portfolio[] = [
     {
-      title: "Fund self-service",
+      sectionIcon: "funds",
+      title: "Self-directed funds",
+      count: "2 products",
       total: "1'770.11+",
-      details: true,
+      ytdPct: "+12.50%",
       items: [
         {
+          iconKind: "tree",
           name: "UBS (CH) Institutional Fund",
-          tag: "Active fund savings plan",
+          pillLabel: "Savings plan",
+          pillDot: true,
           amount: "1'330.00+",
-          change: "+12.50%",
+          changePct: "12.50%",
+          spark: sparkUp,
         },
         {
+          iconKind: "tree",
           name: "Pictet Short-Term Money Market JPY",
-          tag: "Active fund savings plan",
+          pillLabel: "Savings plan",
+          pillDot: true,
           amount: "440.11+",
-          change: "+12.50%",
+          changePct: "12.50%",
+          spark: sparkUp,
         },
       ],
     },
     {
-      title: "Investment consulting plus",
-      details: true,
+      sectionIcon: "managed",
+      title: "Managed portfolios",
+      count: "1 portfolio",
+      total: "4'000.11+",
+      ytdPct: "+12.50%",
       items: [
         {
+          iconKind: "globe",
           name: "99-999999-5",
-          tag: "Balance, Global",
+          pillLabel: "Balance, Global",
           amount: "4'000.11+",
-          change: "+12.50%",
+          changePct: "12.50%",
+          spark: sparkUp,
         },
       ],
     },
     {
+      sectionIcon: "trading",
       title: "E-trading",
-      total: "12'480.50+",
-      details: true,
+      count: "1 account",
+      total: "12'340.45+",
+      ytdPct: "+8.23%",
       items: [
         {
-          name: "Nestlé SA",
-          tag: "Self-managed · 48 shares",
-          amount: "4'627.20+",
-          change: "+3.20%",
-        },
-        {
-          name: "Roche Holding",
-          tag: "Self-managed · 22 shares",
-          amount: "5'458.20+",
-          change: "+1.80%",
-        },
-        {
-          name: "Swiss Market Index ETF",
-          tag: "Self-managed · 18 units",
-          amount: "2'395.10+",
-          change: "+0.95%",
+          iconKind: "card",
+          name: "Trading account",
+          pillLabel: "Securities, CHF",
+          pillIcon: "card",
+          amount: "12'340.45+",
+          changePct: "8.23%",
+          spark: sparkUp,
         },
       ],
     },
@@ -596,136 +747,153 @@ export function ScreenInvest() {
               boxShadow: "0 1px 0 rgba(0, 75, 90, 0.06)",
             }}
           >
+            {/* Section header */}
             <div
               style={{
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "baseline",
+                alignItems: "center",
+                gap: 12,
               }}
             >
-              <div>
+              <SectionIcon kind={p.sectionIcon} />
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
                     fontSize: 16,
                     fontWeight: 700,
                     color: PF.fg1,
                     letterSpacing: "-0.01em",
+                    lineHeight: 1.2,
                   }}
                 >
                   {p.title}
                 </div>
-                {p.total && (
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 300,
-                      color: PF.fg2,
-                      marginTop: 2,
-                    }}
-                  >
-                    CHF {p.total}
-                  </div>
-                )}
+                <div style={{ fontSize: 12, fontWeight: 300, color: PF.fg3, marginTop: 2 }}>
+                  {p.count}
+                </div>
               </div>
-              {p.details && (
-                <span
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: PF.petrol9,
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                  }}
-                >
-                  Details
-                </span>
-              )}
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: PF.petrol9,
+                  cursor: "pointer",
+                  flex: "0 0 auto",
+                }}
+              >
+                View all <Icon name="chevron" size={14} color={PF.petrol9} stroke={1.8} />
+              </span>
             </div>
+
+            {/* Total + YTD */}
             <div
               style={{
-                marginTop: 14,
                 display: "flex",
-                flexDirection: "column",
-                gap: 14,
+                alignItems: "stretch",
+                gap: 16,
+                marginTop: 14,
               }}
             >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 700,
+                    color: PF.fg1,
+                    letterSpacing: "-0.01em",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  CHF {p.total}
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 300, color: PF.fg3, marginTop: 2 }}>
+                  Total value
+                </div>
+              </div>
+              <div style={{ width: 1, background: PF.divider }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: PF.green,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  <span style={{ fontSize: 11 }}>▲</span> {p.ytdPct}
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 300, color: PF.fg3, marginTop: 2 }}>
+                  YTD
+                </div>
+              </div>
+            </div>
+
+            {/* Items */}
+            <div style={{ marginTop: 14 }}>
               {p.items.map((it, ii) => (
                 <div
                   key={ii}
                   style={{
                     display: "flex",
-                    alignItems: "flex-start",
+                    alignItems: "center",
                     gap: 12,
+                    padding: "12px 0",
+                    borderTop: `1px solid ${PF.divider}`,
                   }}
                 >
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 999,
-                      background: PF.petrol1,
-                      flex: "0 0 auto",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke={PF.petrol9}
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="6" cy="14" r="2.2" />
-                      <circle cx="18" cy="14" r="2.2" />
-                      <circle cx="12" cy="6" r="2.2" />
-                      <path d="M7.7 13 10.5 7.5 M16.3 13 13.5 7.5" />
-                      <rect
-                        x="3"
-                        y="3"
-                        width="6"
-                        height="4"
-                        rx="1"
-                        fill={PF.gelb}
-                        stroke={PF.petrol9}
-                      />
-                      <path d="m4.2 4.2 2 2 M6.2 4.2l-2 2" />
-                    </svg>
-                  </div>
+                  <ItemIcon kind={it.iconKind} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
                         fontSize: 14,
                         fontWeight: 700,
                         color: PF.fg1,
-                        lineHeight: 1.3,
+                        lineHeight: 1.25,
                       }}
                     >
                       {it.name}
                     </div>
                     <span
                       style={{
-                        display: "inline-block",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
                         marginTop: 6,
-                        padding: "4px 10px",
+                        padding: "3px 9px 3px 8px",
                         borderRadius: 999,
                         background: PF.petrol1,
                         color: PF.petrol9,
                         fontSize: 11,
-                        fontWeight: 500,
+                        fontWeight: 700,
                       }}
                     >
-                      {it.tag}
+                      {it.pillDot && (
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: 999,
+                            background: PF.green,
+                            display: "inline-block",
+                          }}
+                        />
+                      )}
+                      {it.pillIcon && (
+                        <Icon name={it.pillIcon} size={11} color={PF.petrol9} stroke={1.6} />
+                      )}
+                      {it.pillLabel}
                     </span>
                   </div>
-                  <div style={{ textAlign: "right" }}>
+                  <div style={{ textAlign: "right", flex: "0 0 auto" }}>
                     <div
                       style={{
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: 700,
                         color: PF.fg1,
                         fontVariantNumeric: "tabular-nums",
@@ -735,23 +903,76 @@ export function ScreenInvest() {
                     </div>
                     <div
                       style={{
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: 700,
-                        color: PF.info,
+                        color: PF.green,
                         marginTop: 2,
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: 4,
+                        gap: 3,
+                        fontVariantNumeric: "tabular-nums",
                       }}
                     >
-                      <span style={{ fontSize: 10 }}>▲</span> {it.change}
+                      <span style={{ fontSize: 9 }}>▲</span> {it.changePct}
                     </div>
+                    <div style={{ fontSize: 10, fontWeight: 300, color: PF.fg3 }}>YTD</div>
                   </div>
+                  <MiniSpark d={it.spark} endY={5} />
+                  <Icon name="chevron" size={14} color={PF.fg4} stroke={1.8} />
                 </div>
               ))}
             </div>
           </div>
         ))}
+
+        {/* Trust card */}
+        <div
+          style={{
+            background: PF.white,
+            borderRadius: 20,
+            padding: "14px 16px",
+            boxShadow: "0 1px 0 rgba(0, 75, 90, 0.06)",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 12,
+              background: PF.petrol1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flex: "0 0 auto",
+            }}
+          >
+            <Icon name="shield" size={18} color={PF.petrol9} stroke={1.8} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: PF.fg1, lineHeight: 1.25 }}>
+              Your assets are protected
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 300, color: PF.fg3, marginTop: 2 }}>
+              Bank-level security &amp; Swiss regulation
+            </div>
+          </div>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: 12,
+              fontWeight: 700,
+              color: PF.petrol9,
+              flex: "0 0 auto",
+            }}
+          >
+            Learn more <Icon name="chevron" size={12} color={PF.petrol9} stroke={1.8} />
+          </span>
+        </div>
       </div>
 
       <div style={{ height: 20 }} />
