@@ -259,74 +259,37 @@ function SectionIcon({ kind }: { kind: SectionIconKind }) {
       <svg width={26} height={26} viewBox="0 0 24 24" fill="none">
         {kind === "funds" && (
           <g>
-            {/* L-shape axis */}
+            {/* Rising trend line with yellow accent dot at the peak */}
             <path
-              d="M5 5 L5 18 L19 18"
-              stroke="rgba(255,255,255,0.22)"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              fill="none"
-            />
-            {/* Yellow accent square */}
-            <rect x="14.6" y="9.2" width="3" height="2.4" rx="0.5" fill={PF.gelb} />
-            {/* White trending arrow */}
-            <path
-              d="M7.5 14.5 L11 11 L13 13 L16.5 9.5"
+              d="M5 16 L9.5 11.5 L12 14 L17 9"
               stroke={PF.white}
               strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"
             />
-            <path
-              d="M14 9.5 L17 9.5 L17 12.5"
-              stroke={PF.white}
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
+            <circle cx="17" cy="9" r="2" fill={PF.gelb} />
           </g>
         )}
         {kind === "managed" && (
           <g>
+            <circle cx="12" cy="10" r="3" stroke={PF.white} strokeWidth="1.7" fill="none" />
             <path
-              d="M5 5 L5 18 L19 18"
-              stroke="rgba(255,255,255,0.22)"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              fill="none"
-            />
-            <circle cx="11" cy="10" r="3" stroke={PF.white} strokeWidth="1.6" fill="none" />
-            <path
-              d="M6 17.5a5 5 0 0 1 10 0"
+              d="M6 19a6 6 0 0 1 12 0"
               stroke={PF.white}
-              strokeWidth="1.6"
+              strokeWidth="1.7"
               strokeLinecap="round"
               fill="none"
             />
-            <polygon
-              points="18,4 19,6 21.2,6.3 19.6,7.8 20,10 18,8.9 16,10 16.4,7.8 14.8,6.3 17,6"
-              fill={PF.gelb}
-              stroke="none"
-            />
+            <circle cx="17.5" cy="6.5" r="1.6" fill={PF.gelb} />
           </g>
         )}
         {kind === "trading" && (
           <g>
-            <path
-              d="M5 5 L5 18 L19 18"
-              stroke="rgba(255,255,255,0.22)"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              fill="none"
-            />
-            <line x1="8" y1="5.5" x2="8" y2="16.5" stroke={PF.white} strokeWidth="1.4" strokeLinecap="round" />
-            <rect x="6.7" y="8" width="2.6" height="6.5" rx="0.5" fill={PF.white} opacity={0.9} />
-            <line x1="13" y1="6" x2="13" y2="17" stroke={PF.white} strokeWidth="1.4" strokeLinecap="round" />
-            <rect x="11.7" y="9" width="2.6" height="5.5" rx="0.5" fill={PF.white} />
-            <line x1="18" y1="6.5" x2="18" y2="16" stroke={PF.gelb} strokeWidth="1.4" strokeLinecap="round" />
-            <rect x="16.7" y="8.5" width="2.6" height="5.5" rx="0.5" fill={PF.gelb} />
+            {/* Three centered bars, middle one yellow */}
+            <rect x="6.5" y="9" width="2.6" height="9" rx="0.6" fill={PF.white} />
+            <rect x="10.7" y="6" width="2.6" height="12" rx="0.6" fill={PF.gelb} />
+            <rect x="14.9" y="11" width="2.6" height="7" rx="0.6" fill={PF.white} />
           </g>
         )}
       </svg>
@@ -538,7 +501,7 @@ export function ScreenInvest() {
         </div>
 
         {/* Action row — 3 buttons */}
-        <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
+        <div style={{ display: "flex", gap: 6, marginTop: 18 }}>
           <button
             style={{
               flex: 1,
@@ -1417,9 +1380,9 @@ export function ScreenInvest() {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  padding: "12px 20px 36px",
-                  background:
-                    "linear-gradient(to top, rgba(255,255,255,1) 70%, rgba(255,255,255,0))",
+                  padding: "16px 20px 36px",
+                  background: PF.white,
+                  borderTop: `1px solid ${PF.divider}`,
                   display: "flex",
                   gap: 8,
                 }}
