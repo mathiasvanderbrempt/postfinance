@@ -382,6 +382,13 @@ export function ScreenInvest() {
 
   // Holdings tray state — null = closed, index of active portfolio when open
   const [activeSection, setActiveSection] = React.useState<number | null>(null);
+  // Holding detail state — null = overview, index into active section's items
+  const [activeItem, setActiveItem] = React.useState<number | null>(null);
+  // Period selector for detail
+  const [period, setPeriod] = React.useState<"1W" | "1M" | "3M" | "1Y" | "ALL">("1M");
+  React.useEffect(() => {
+    if (activeSection === null) setActiveItem(null);
+  }, [activeSection]);
 
   const portfolios: Portfolio[] = [
     {
@@ -443,6 +450,9 @@ export function ScreenInvest() {
   const spring = "cubic-bezier(0.32, 0.72, 0, 1)";
   const isTrayOpen = activeSection !== null;
   const activePortfolio = activeSection !== null ? portfolios[activeSection] : null;
+  const activeHolding =
+    activePortfolio && activeItem !== null ? activePortfolio.items[activeItem] : null;
+  const isDetailOpen = activeHolding !== null;
 
   return (
     <div
@@ -455,6 +465,7 @@ export function ScreenInvest() {
         display: "flex",
         flexDirection: "column",
         paddingTop: 44,
+        paddingBottom: 84,
         fontFamily: pfFont,
         color: PF.fg1,
         fontWeight: 300,
@@ -962,32 +973,35 @@ export function ScreenInvest() {
           opacity: isTrayOpen ? 1 : 0,
           pointerEvents: isTrayOpen ? "auto" : "none",
           transition: "opacity 320ms ease",
-          zIndex: 1,
+          zIndex: 8,
         }}
       />
 
-      {/* Section detail tray */}
+      {/* Section detail tray (overview ↔ holding detail) */}
       <div
         style={{
           position: "absolute",
           left: 0,
           right: 0,
           bottom: 0,
-          maxHeight: "82%",
+          height: "85%",
           transform: isTrayOpen ? "translateY(0)" : "translateY(100%)",
           transition: `transform 460ms ${spring}`,
           background: PF.white,
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
-          boxShadow: "0 -10px 40px rgba(0, 75, 90, 0.12)",
+          boxShadow: "0 -12px 44px rgba(0, 75, 90, 0.18)",
           display: "flex",
           flexDirection: "column",
-          zIndex: 2,
+          zIndex: 10,
         }}
       >
-        {/* Drag handle */}
+        {/* Drag handle (always visible) */}
         <div
-          onClick={() => setActiveSection(null)}
+          onClick={() => {
+            if (isDetailOpen) setActiveItem(null);
+            else setActiveSection(null);
+          }}
           style={{
             paddingTop: 8,
             paddingBottom: 6,
@@ -1007,205 +1021,652 @@ export function ScreenInvest() {
           />
         </div>
 
-        {/* Tray header */}
-        <div
-          style={{
-            padding: "4px 20px 14px",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            flex: "0 0 auto",
-          }}
-        >
-          {activePortfolio && <SectionIcon kind={activePortfolio.sectionIcon} />}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 17,
-                fontWeight: 700,
-                letterSpacing: "-0.01em",
-                color: PF.fg1,
-                lineHeight: 1.2,
-              }}
-            >
-              {activePortfolio?.title ?? ""}
-            </div>
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 300,
-                color: PF.fg3,
-                marginTop: 2,
-              }}
-            >
-              {activePortfolio?.count ?? ""}
-            </div>
-          </div>
-          <button
-            onClick={() => setActiveSection(null)}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: PF.petrol9,
-              fontFamily: pfFont,
-              fontWeight: 700,
-              fontSize: 13,
-              cursor: "pointer",
-              padding: 0,
-            }}
-          >
-            Done
-          </button>
-        </div>
-
-        {/* Total + YTD strip */}
-        {activePortfolio && (
-          <div
-            style={{
-              margin: "0 20px 8px",
-              padding: "12px 14px",
-              borderRadius: 14,
-              background: PF.petrol1,
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              flex: "0 0 auto",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: PF.fg1,
-                  letterSpacing: "-0.01em",
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                CHF {activePortfolio.total}
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 300,
-                  color: PF.fg3,
-                  marginTop: 2,
-                }}
-              >
-                Total value
-              </div>
-            </div>
-            <div style={{ width: 1, alignSelf: "stretch", background: "rgba(0,75,90,0.12)" }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: PF.green,
-                  fontVariantNumeric: "tabular-nums",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                <span style={{ fontSize: 11 }}>▲</span> {activePortfolio.ytdPct}
-              </div>
-              <div style={{ fontSize: 11, fontWeight: 300, color: PF.fg3, marginTop: 2 }}>
-                YTD
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Detail rows (scrollable) */}
+        {/* Slider track between overview and detail */}
         <div
           style={{
             flex: 1,
             minHeight: 0,
-            overflowY: "auto",
-            padding: "0 20px 24px",
-            WebkitOverflowScrolling: "touch",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
-          {activePortfolio?.items.map((it, ii) => (
+          <div
+            style={{
+              display: "flex",
+              width: "200%",
+              height: "100%",
+              transform: `translateX(${isDetailOpen ? "-50%" : "0"})`,
+              transition: `transform 420ms ${spring}`,
+            }}
+          >
+            {/* ── Pane 1: Section overview ───────────────────────── */}
             <div
-              key={ii}
               style={{
+                width: "50%",
+                flex: "0 0 50%",
                 display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "14px 0",
-                borderTop: ii === 0 ? "none" : `1px solid ${PF.divider}`,
+                flexDirection: "column",
+                minHeight: 0,
               }}
             >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
+              {/* Header */}
+              <div
+                style={{
+                  padding: "4px 20px 14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  flex: "0 0 auto",
+                }}
+              >
+                {activePortfolio && <SectionIcon kind={activePortfolio.sectionIcon} />}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 700,
+                      letterSpacing: "-0.01em",
+                      color: PF.fg1,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {activePortfolio?.title ?? ""}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 300,
+                      color: PF.fg3,
+                      marginTop: 2,
+                    }}
+                  >
+                    {activePortfolio?.count ?? ""}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveSection(null)}
                   style={{
-                    fontSize: 14,
+                    background: "transparent",
+                    border: "none",
+                    color: PF.petrol9,
+                    fontFamily: pfFont,
                     fontWeight: 700,
-                    color: PF.fg1,
-                    lineHeight: 1.25,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    padding: 0,
                   }}
                 >
-                  {it.name}
+                  Done
+                </button>
+              </div>
+
+              {/* Total + YTD strip */}
+              {activePortfolio && (
+                <div
+                  style={{
+                    margin: "0 20px 8px",
+                    padding: "12px 14px",
+                    borderRadius: 14,
+                    background: PF.petrol1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    flex: "0 0 auto",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 18,
+                        fontWeight: 700,
+                        color: PF.fg1,
+                        letterSpacing: "-0.01em",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      CHF {activePortfolio.total}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 300,
+                        color: PF.fg3,
+                        marginTop: 2,
+                      }}
+                    >
+                      Total value
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      width: 1,
+                      alignSelf: "stretch",
+                      background: "rgba(0,75,90,0.12)",
+                    }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: PF.green,
+                        fontVariantNumeric: "tabular-nums",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <span style={{ fontSize: 11 }}>▲</span> {activePortfolio.ytdPct}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 300,
+                        color: PF.fg3,
+                        marginTop: 2,
+                      }}
+                    >
+                      YTD
+                    </div>
+                  </div>
                 </div>
-                <span
+              )}
+
+              {/* Items list (scrollable) */}
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  padding: "0 20px 24px",
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                {activePortfolio?.items.map((it, ii) => (
+                  <div
+                    key={ii}
+                    onClick={() => setActiveItem(ii)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "14px 0",
+                      borderTop: ii === 0 ? "none" : `1px solid ${PF.divider}`,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: PF.fg1,
+                          lineHeight: 1.25,
+                        }}
+                      >
+                        {it.name}
+                      </div>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          marginTop: 6,
+                          padding: "3px 9px 3px 8px",
+                          borderRadius: 999,
+                          background: PF.petrol1,
+                          color: PF.petrol9,
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {it.pillDot && (
+                          <span
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: 999,
+                              background: PF.green,
+                              display: "inline-block",
+                            }}
+                          />
+                        )}
+                        {it.pillIcon && (
+                          <Icon name={it.pillIcon} size={11} color={PF.petrol9} stroke={1.6} />
+                        )}
+                        {it.pillLabel}
+                      </span>
+                    </div>
+                    <div style={{ textAlign: "right", flex: "0 0 auto" }}>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: PF.fg1,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        CHF {it.amount}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: PF.green,
+                          marginTop: 2,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        ▲ {it.changePct} YTD
+                      </div>
+                    </div>
+                    <Icon name="chevron" size={14} color={PF.fg4} stroke={1.8} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Pane 2: Holding detail ────────────────────────── */}
+            <div
+              style={{
+                width: "50%",
+                flex: "0 0 50%",
+                display: "flex",
+                flexDirection: "column",
+                minHeight: 0,
+              }}
+            >
+              {/* Back bar */}
+              <div
+                style={{
+                  padding: "4px 12px 8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  flex: "0 0 auto",
+                }}
+              >
+                <button
+                  onClick={() => setActiveItem(null)}
+                  aria-label="Back"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: 6,
-                    marginTop: 6,
-                    padding: "3px 9px 3px 8px",
-                    borderRadius: 999,
-                    background: PF.petrol1,
+                    gap: 2,
+                    background: "transparent",
+                    border: "none",
                     color: PF.petrol9,
-                    fontSize: 11,
+                    fontFamily: pfFont,
                     fontWeight: 700,
+                    fontSize: 14,
+                    cursor: "pointer",
+                    padding: "6px 8px",
                   }}
                 >
-                  {it.pillDot && (
-                    <span
+                  <Icon name="chevron-left" size={18} color={PF.petrol9} stroke={2} />
+                  {activePortfolio?.title.split(" ").slice(0, 2).join(" ") ?? "Back"}
+                </button>
+                <div style={{ flex: 1 }} />
+                <button
+                  aria-label="More"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 999,
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: PF.petrol9,
+                  }}
+                >
+                  <span style={{ fontSize: 20, lineHeight: 1, letterSpacing: 1 }}>···</span>
+                </button>
+              </div>
+
+              {/* Scrollable detail body */}
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  WebkitOverflowScrolling: "touch",
+                  paddingBottom: 96,
+                }}
+              >
+                {activeHolding && (
+                  <>
+                    {/* Title + pill */}
+                    <div style={{ padding: "0 20px" }}>
+                      <div
+                        style={{
+                          fontSize: 22,
+                          fontWeight: 700,
+                          letterSpacing: "-0.02em",
+                          color: PF.fg1,
+                          lineHeight: 1.15,
+                        }}
+                      >
+                        {activeHolding.name}
+                      </div>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          marginTop: 8,
+                          padding: "3px 9px 3px 8px",
+                          borderRadius: 999,
+                          background: PF.petrol1,
+                          color: PF.petrol9,
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {activeHolding.pillDot && (
+                          <span
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: 999,
+                              background: PF.green,
+                              display: "inline-block",
+                            }}
+                          />
+                        )}
+                        {activeHolding.pillLabel}
+                      </span>
+                    </div>
+
+                    {/* Hero value */}
+                    <div style={{ padding: "20px 20px 8px" }}>
+                      <div
+                        style={{
+                          fontSize: 32,
+                          fontWeight: 700,
+                          letterSpacing: "-0.02em",
+                          color: PF.fg1,
+                          lineHeight: 1.05,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        CHF {activeHolding.amount}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 6,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: PF.green,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        <span>▲ +CHF 147.78</span>
+                        <span>{activeHolding.changePct}</span>
+                        <span style={{ color: PF.fg3, fontWeight: 300 }}>
+                          {period}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Period selector */}
+                    <div
                       style={{
-                        width: 6,
-                        height: 6,
+                        margin: "12px 20px 0",
+                        padding: 4,
+                        background: PF.petrol1,
                         borderRadius: 999,
-                        background: PF.green,
-                        display: "inline-block",
+                        display: "flex",
+                        gap: 2,
                       }}
-                    />
-                  )}
-                  {it.pillIcon && (
-                    <Icon name={it.pillIcon} size={11} color={PF.petrol9} stroke={1.6} />
-                  )}
-                  {it.pillLabel}
-                </span>
+                    >
+                      {(["1W", "1M", "3M", "1Y", "ALL"] as const).map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setPeriod(p)}
+                          style={{
+                            flex: 1,
+                            padding: "7px 0",
+                            borderRadius: 999,
+                            background: period === p ? PF.white : "transparent",
+                            color: period === p ? PF.petrol9 : PF.petrol7,
+                            border: "none",
+                            fontFamily: pfFont,
+                            fontWeight: 700,
+                            fontSize: 11,
+                            cursor: "pointer",
+                            boxShadow:
+                              period === p ? "0 1px 2px rgba(0,75,90,.12)" : "none",
+                            transition: "background 180ms ease",
+                          }}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Chart */}
+                    <div
+                      style={{
+                        margin: "16px 20px 0",
+                        height: 140,
+                        position: "relative",
+                      }}
+                    >
+                      <svg
+                        viewBox="0 0 320 140"
+                        preserveAspectRatio="none"
+                        style={{ width: "100%", height: "100%", display: "block" }}
+                      >
+                        <defs>
+                          <linearGradient id="pf-area" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={PF.green} stopOpacity={0.18} />
+                            <stop offset="100%" stopColor={PF.green} stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d="M0 110 L24 102 L48 108 L72 92 L96 96 L120 78 L144 86 L168 70 L192 76 L216 58 L240 64 L264 44 L288 50 L312 28 L320 24 L320 140 L0 140 Z"
+                          fill="url(#pf-area)"
+                        />
+                        <path
+                          d="M0 110 L24 102 L48 108 L72 92 L96 96 L120 78 L144 86 L168 70 L192 76 L216 58 L240 64 L264 44 L288 50 L312 28 L320 24"
+                          stroke={PF.green}
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                        />
+                        <circle cx={320} cy={24} r={3.4} fill={PF.green} />
+                      </svg>
+                    </div>
+
+                    {/* Stats grid */}
+                    <div
+                      style={{
+                        margin: "20px 20px 0",
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: 1,
+                        background: PF.divider,
+                        borderRadius: 14,
+                        overflow: "hidden",
+                      }}
+                    >
+                      {[
+                        { k: "Cost basis", v: "CHF 1'182.22" },
+                        { k: "Total gain", v: "+CHF 147.78", color: PF.green },
+                        { k: "Avg price", v: "CHF 142.30" },
+                        { k: "Last update", v: "Today · 17:30" },
+                      ].map((s) => (
+                        <div
+                          key={s.k}
+                          style={{
+                            background: PF.white,
+                            padding: "14px 14px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 4,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 300,
+                              color: PF.fg3,
+                            }}
+                          >
+                            {s.k}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: s.color ?? PF.fg1,
+                              fontVariantNumeric: "tabular-nums",
+                              letterSpacing: "-0.005em",
+                            }}
+                          >
+                            {s.v}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* About card */}
+                    <div
+                      style={{
+                        margin: "20px 20px 0",
+                        background: PF.white,
+                        border: `1px solid ${PF.divider}`,
+                        borderRadius: 16,
+                        padding: 16,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          letterSpacing: "0.06em",
+                          textTransform: "uppercase",
+                          color: PF.fg3,
+                        }}
+                      >
+                        About
+                      </div>
+                      <p
+                        style={{
+                          margin: "8px 0 0",
+                          fontSize: 13,
+                          fontWeight: 300,
+                          lineHeight: 1.5,
+                          color: PF.fg2,
+                        }}
+                      >
+                        A diversified position tracking the underlying benchmark.
+                        Invests broadly across listed Swiss large- and mid-cap
+                        equities with passive cost discipline.
+                      </p>
+                      <div
+                        style={{
+                          marginTop: 14,
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          rowGap: 10,
+                          columnGap: 12,
+                        }}
+                      >
+                        {[
+                          { k: "ISIN", v: "CH0123456789" },
+                          { k: "Asset class", v: "Equity" },
+                          { k: "Currency", v: "CHF" },
+                          { k: "Domicile", v: "Switzerland" },
+                          { k: "Risk score", v: "4 / 7" },
+                          { k: "TER", v: "0.18%" },
+                        ].map((r) => (
+                          <div key={r.k}>
+                            <div style={{ fontSize: 11, color: PF.fg3, fontWeight: 300 }}>
+                              {r.k}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: PF.fg1,
+                                marginTop: 1,
+                                fontVariantNumeric: "tabular-nums",
+                              }}
+                            >
+                              {r.v}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-              <div style={{ textAlign: "right", flex: "0 0 auto" }}>
-                <div
+
+              {/* Sticky bottom CTA */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  padding: "12px 20px 20px",
+                  background:
+                    "linear-gradient(to top, rgba(255,255,255,1) 70%, rgba(255,255,255,0))",
+                  display: "flex",
+                  gap: 8,
+                }}
+              >
+                <button
                   style={{
-                    fontSize: 13,
+                    flex: 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    background: PF.gelb,
+                    color: PF.petrol11,
+                    border: "none",
+                    borderRadius: 999,
+                    padding: "13px 16px",
+                    fontFamily: pfFont,
                     fontWeight: 700,
-                    color: PF.fg1,
-                    fontVariantNumeric: "tabular-nums",
+                    fontSize: 14,
+                    cursor: "pointer",
                   }}
                 >
-                  CHF {it.amount}
-                </div>
-                <div
+                  <Icon name="plus" size={16} color={PF.petrol11} stroke={2} /> Buy more
+                </button>
+                <button
                   style={{
-                    fontSize: 11,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    background: "transparent",
+                    color: PF.petrol9,
+                    border: `1px solid ${PF.divider}`,
+                    borderRadius: 999,
+                    padding: "13px 16px",
+                    fontFamily: pfFont,
                     fontWeight: 700,
-                    color: PF.green,
-                    marginTop: 2,
-                    fontVariantNumeric: "tabular-nums",
+                    fontSize: 14,
+                    cursor: "pointer",
                   }}
                 >
-                  ▲ {it.changePct} YTD
-                </div>
+                  Manage
+                </button>
               </div>
-              <Icon name="chevron" size={14} color={PF.fg4} stroke={1.8} />
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>

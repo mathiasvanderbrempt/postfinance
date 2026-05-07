@@ -151,13 +151,26 @@ export default function Phone({
               flexDirection: "column",
               minHeight: 0,
               overflow: "hidden",
+              position: "relative",
             }}
           >
             {children}
           </div>
 
-          {/* Tab bar */}
-          {showTabBar && activeTab && <PFTabBar active={activeTab} />}
+          {/* Tab bar — overlay so screen-internal sheets can cover it */}
+          {showTabBar && activeTab && (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 5,
+              }}
+            >
+              <PFTabBar active={activeTab} />
+            </div>
+          )}
         </div>
       </div>
     </div>

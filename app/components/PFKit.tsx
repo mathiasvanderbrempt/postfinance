@@ -576,6 +576,7 @@ export function PFScreen({
         color: PF.fg1,
         fontWeight: 300,
         paddingTop: 44,
+        paddingBottom: 84,
       }}
     >
       {children}
