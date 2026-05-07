@@ -223,16 +223,13 @@ export function ScreenPay() {
 }
 
 /* ─── INVEST ──────────────────────────────────────────────────────── */
-type ItemIconKind = "tree" | "globe" | "card";
 type Holding = {
-  iconKind: ItemIconKind;
   name: string;
   pillLabel: string;
   pillDot?: boolean;
   pillIcon?: string;
   amount: string;
   changePct: string;
-  spark: string; // SVG path d
 };
 type SectionIconKind = "funds" | "managed" | "trading";
 type Portfolio = {
@@ -248,23 +245,33 @@ function SectionIcon({ kind }: { kind: SectionIconKind }) {
   return (
     <div
       style={{
-        width: 40,
-        height: 40,
-        borderRadius: 12,
+        width: 44,
+        height: 44,
+        borderRadius: 14,
         background: PF.petrol9,
         flex: "0 0 auto",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
       }}
     >
-      <svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <svg width={26} height={26} viewBox="0 0 24 24" fill="none">
         {kind === "funds" && (
           <g>
-            <path d="M2 5v14h20" stroke="rgba(255,255,255,.35)" strokeWidth="1.4" strokeLinecap="round" />
-            <rect x="14" y="9" width="2.6" height="7" rx="0.6" fill={PF.gelb} />
+            {/* L-shape axis */}
             <path
-              d="M5 16 L10 11 L13 13.5 L19 7"
+              d="M5 5 L5 18 L19 18"
+              stroke="rgba(255,255,255,0.22)"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              fill="none"
+            />
+            {/* Yellow accent square */}
+            <rect x="14.6" y="9.2" width="3" height="2.4" rx="0.5" fill={PF.gelb} />
+            {/* White trending arrow */}
+            <path
+              d="M7.5 14.5 L11 11 L13 13 L16.5 9.5"
               stroke={PF.white}
               strokeWidth="1.8"
               strokeLinecap="round"
@@ -272,7 +279,7 @@ function SectionIcon({ kind }: { kind: SectionIconKind }) {
               fill="none"
             />
             <path
-              d="M16 7 L19 7 L19 10"
+              d="M14 9.5 L17 9.5 L17 12.5"
               stroke={PF.white}
               strokeWidth="1.8"
               strokeLinecap="round"
@@ -282,95 +289,48 @@ function SectionIcon({ kind }: { kind: SectionIconKind }) {
           </g>
         )}
         {kind === "managed" && (
-          <g stroke={PF.white} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
-            <circle cx="11" cy="9" r="3.4" />
-            <path d="M4.5 20a6.5 6.5 0 0 1 13 0" />
+          <g>
+            <path
+              d="M5 5 L5 18 L19 18"
+              stroke="rgba(255,255,255,0.22)"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              fill="none"
+            />
+            <circle cx="11" cy="10" r="3" stroke={PF.white} strokeWidth="1.6" fill="none" />
+            <path
+              d="M6 17.5a5 5 0 0 1 10 0"
+              stroke={PF.white}
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              fill="none"
+            />
             <polygon
-              points="18,3 19.2,5.4 21.8,5.8 19.9,7.6 20.4,10.2 18,9 15.6,10.2 16.1,7.6 14.2,5.8 16.8,5.4"
+              points="18,4 19,6 21.2,6.3 19.6,7.8 20,10 18,8.9 16,10 16.4,7.8 14.8,6.3 17,6"
               fill={PF.gelb}
               stroke="none"
             />
           </g>
         )}
         {kind === "trading" && (
-          <g strokeLinecap="round">
-            <line x1="6" y1="3" x2="6" y2="21" stroke={PF.white} strokeWidth="1.4" />
-            <line x1="12" y1="2.5" x2="12" y2="21.5" stroke={PF.white} strokeWidth="1.4" />
-            <line x1="18" y1="3.5" x2="18" y2="20.5" stroke={PF.gelb} strokeWidth="1.4" />
-            <rect x="4.6" y="7" width="2.8" height="9" rx="0.6" fill={PF.white} opacity={0.85} />
-            <rect x="10.6" y="5" width="2.8" height="11" rx="0.6" fill={PF.white} />
-            <rect x="16.6" y="9" width="2.8" height="8" rx="0.6" fill={PF.gelb} />
+          <g>
+            <path
+              d="M5 5 L5 18 L19 18"
+              stroke="rgba(255,255,255,0.22)"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              fill="none"
+            />
+            <line x1="8" y1="5.5" x2="8" y2="16.5" stroke={PF.white} strokeWidth="1.4" strokeLinecap="round" />
+            <rect x="6.7" y="8" width="2.6" height="6.5" rx="0.5" fill={PF.white} opacity={0.9} />
+            <line x1="13" y1="6" x2="13" y2="17" stroke={PF.white} strokeWidth="1.4" strokeLinecap="round" />
+            <rect x="11.7" y="9" width="2.6" height="5.5" rx="0.5" fill={PF.white} />
+            <line x1="18" y1="6.5" x2="18" y2="16" stroke={PF.gelb} strokeWidth="1.4" strokeLinecap="round" />
+            <rect x="16.7" y="8.5" width="2.6" height="5.5" rx="0.5" fill={PF.gelb} />
           </g>
         )}
       </svg>
     </div>
-  );
-}
-
-function ItemIcon({ kind }: { kind: ItemIconKind }) {
-  return (
-    <div
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        background: PF.petrol1,
-        flex: "0 0 auto",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {kind === "tree" && (
-        <svg
-          width={22}
-          height={22}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={PF.petrol9}
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="2.5" y="3" width="5" height="3.6" rx="0.8" fill={PF.gelb} stroke="none" />
-          <path d="M5 7v3 M5 10c0 1.5 2 2 4 2.5s4 1 4 3v3 M5 10c0 1.5 2 2 4 2.5s4 1 4 3v3" />
-          <circle cx="13" cy="13.6" r="1.7" />
-          <circle cx="19" cy="9.5" r="1.7" />
-          <circle cx="13" cy="20.5" r="1.7" />
-          <path d="M14.5 12.4 17.5 10.6 M14.4 14.6 17.6 17" />
-          <circle cx="19" cy="18.2" r="1.7" />
-        </svg>
-      )}
-      {kind === "globe" && (
-        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={PF.petrol9} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M3 12h18 M12 3a14 14 0 0 1 0 18 M12 3a14 14 0 0 0 0 18" />
-        </svg>
-      )}
-      {kind === "card" && (
-        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={PF.petrol9} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="6" width="18" height="13" rx="2.4" />
-          <path d="M3 10h18" />
-          <rect x="6" y="14" width="4" height="2.2" rx="0.6" fill={PF.gelb} stroke="none" />
-        </svg>
-      )}
-    </div>
-  );
-}
-
-function MiniSpark({ d, endY }: { d: string; endY: number }) {
-  return (
-    <svg width={56} height={28} viewBox="0 0 56 28" fill="none" aria-hidden>
-      <path
-        d={d}
-        stroke={PF.green}
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <circle cx={52} cy={endY} r={2.2} fill={PF.green} />
-    </svg>
   );
 }
 
@@ -381,8 +341,6 @@ export function ScreenInvest() {
     { id: "cash", icon: "wallet", label: "Cash", pct: 15 },
   ];
   const accent = "#5EE6B6";
-  const sparkUp = "M2 22 L10 18 L18 20 L26 14 L34 16 L42 9 L52 5";
-  const sparkUpEndY = 5;
   const portfolios: Portfolio[] = [
     {
       sectionIcon: "funds",
@@ -392,22 +350,18 @@ export function ScreenInvest() {
       ytdPct: "+12.50%",
       items: [
         {
-          iconKind: "tree",
           name: "UBS (CH) Institutional Fund",
           pillLabel: "Savings plan",
           pillDot: true,
           amount: "1'330.00+",
           changePct: "12.50%",
-          spark: sparkUp,
         },
         {
-          iconKind: "tree",
           name: "Pictet Short-Term Money Market JPY",
           pillLabel: "Savings plan",
           pillDot: true,
           amount: "440.11+",
           changePct: "12.50%",
-          spark: sparkUp,
         },
       ],
     },
@@ -419,12 +373,10 @@ export function ScreenInvest() {
       ytdPct: "+12.50%",
       items: [
         {
-          iconKind: "globe",
           name: "99-999999-5",
           pillLabel: "Balance, Global",
           amount: "4'000.11+",
           changePct: "12.50%",
-          spark: sparkUp,
         },
       ],
     },
@@ -436,13 +388,11 @@ export function ScreenInvest() {
       ytdPct: "+8.23%",
       items: [
         {
-          iconKind: "card",
           name: "Trading account",
           pillLabel: "Securities, CHF",
           pillIcon: "card",
           amount: "12'340.45+",
           changePct: "8.23%",
-          spark: sparkUp,
         },
       ],
     },
@@ -820,7 +770,6 @@ export function ScreenInvest() {
                     borderTop: `1px solid ${PF.divider}`,
                   }}
                 >
-                  <ItemIcon kind={it.iconKind} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
@@ -866,7 +815,7 @@ export function ScreenInvest() {
                   <div style={{ textAlign: "right", flex: "0 0 auto" }}>
                     <div
                       style={{
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: 700,
                         color: PF.fg1,
                         fontVariantNumeric: "tabular-nums",
@@ -886,11 +835,9 @@ export function ScreenInvest() {
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
-                      <span style={{ fontSize: 9 }}>▲</span> {it.changePct}
+                      <span style={{ fontSize: 9 }}>▲</span> {it.changePct} YTD
                     </div>
-                    <div style={{ fontSize: 10, fontWeight: 300, color: PF.fg3 }}>YTD</div>
                   </div>
-                  <MiniSpark d={it.spark} endY={5} />
                   <Icon name="chevron" size={14} color={PF.fg4} stroke={1.8} />
                 </div>
               ))}
