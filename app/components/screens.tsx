@@ -1072,6 +1072,7 @@ export function ScreenInvest() {
                 display: "flex",
                 flexDirection: "column",
                 minHeight: 0,
+                position: "relative",
               }}
             >
               {/* Back bar */}
