@@ -341,6 +341,48 @@ export function ScreenInvest() {
     { id: "cash", icon: "wallet", label: "Cash", pct: 15 },
   ];
   const accent = "#5EE6B6";
+
+  // Hero swipe state
+  const [page, setPage] = React.useState(0);
+  const [dragX, setDragX] = React.useState(0);
+  const [dragging, setDragging] = React.useState(false);
+  const startX = React.useRef(0);
+  const trackRef = React.useRef<HTMLDivElement>(null);
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement).closest("button, a")) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragging(true);
+    startX.current = e.clientX;
+    setDragX(0);
+  }
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!dragging) return;
+    const dx = e.clientX - startX.current;
+    // Resist out-of-range drag
+    const w = trackRef.current?.clientWidth ?? 1;
+    let resisted = dx;
+    if ((page === 0 && dx > 0) || (page === 1 && dx < 0)) {
+      resisted = dx * 0.35;
+    }
+    void w;
+    setDragX(resisted);
+  }
+  function onPointerUp() {
+    if (!dragging) return;
+    setDragging(false);
+    const w = trackRef.current?.clientWidth ?? 1;
+    const threshold = w * 0.2;
+    let next = page;
+    if (dragX < -threshold) next = Math.min(1, page + 1);
+    else if (dragX > threshold) next = Math.max(0, page - 1);
+    setPage(next);
+    setDragX(0);
+  }
+
+  // Holdings tray state
+  const [trayExpanded, setTrayExpanded] = React.useState(false);
+
   const portfolios: Portfolio[] = [
     {
       sectionIcon: "funds",
@@ -398,10 +440,29 @@ export function ScreenInvest() {
     },
   ];
 
+  const trayCollapsedHeight = 248;
+  const trayFullHeight = 560;
+  const trayHidden = trayFullHeight - trayCollapsedHeight;
+  const spring = "cubic-bezier(0.32, 0.72, 0, 1)";
+
   return (
-    <PFScreen bg={PF.bgAlt}>
+    <div
+      style={{
+        position: "relative",
+        flex: 1,
+        minHeight: 0,
+        background: PF.bgAlt,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        paddingTop: 44,
+        fontFamily: pfFont,
+        color: PF.fg1,
+        fontWeight: 300,
+      }}
+    >
       <div style={{ height: 12 }} />
-      {/* HERO — investment & retirement total + allocation */}
+      {/* HERO — investment & retirement total + allocation (swipeable) */}
       <div
         className="pf-petrol-card"
         style={{
@@ -409,10 +470,11 @@ export function ScreenInvest() {
           background: PF.petrol9,
           color: PF.white,
           borderRadius: 24,
-          padding: 20,
+          padding: "20px 20px 16px",
           boxShadow: "0 8px 20px rgba(0,75,90,0.10)",
           position: "relative",
           overflow: "hidden",
+          flex: "0 0 auto",
         }}
       >
         {/* Top row: title + Total pill */}
@@ -474,429 +536,578 @@ export function ScreenInvest() {
           </button>
         </div>
 
-        {/* Balance */}
-        <div style={{ position: "relative", marginTop: 18 }}>
+        {/* Swipe track */}
+        <div
+          ref={trackRef}
+          style={{
+            overflow: "hidden",
+            marginTop: 16,
+            touchAction: "pan-y",
+          }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        >
           <div
             style={{
-              fontSize: 30,
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.05,
-            }}
-          >
-            CHF 595&apos;389.49
-          </div>
-          <div
-            style={{
-              marginTop: 8,
               display: "flex",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 6,
-              fontSize: 12,
-              fontWeight: 700,
+              width: "200%",
+              transform: `translateX(calc(${-page * 50}% + ${dragX}px))`,
+              transition: dragging ? "none" : `transform 420ms ${spring}`,
+              minHeight: 232,
             }}
           >
-            <span style={{ color: accent }}>+CHF 12&apos;430</span>
-            <span style={{ fontWeight: 300, opacity: 0.8 }}>this month</span>
-            <span style={{ color: accent, marginLeft: 2 }}>▲ 2.14%</span>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div
-          style={{
-            height: 1,
-            background: "rgba(255,255,255,.12)",
-            margin: "18px 0 14px",
-          }}
-        />
-
-        {/* Allocation header */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            fontSize: 12,
-          }}
-        >
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
-            Portfolio allocation
-            <Icon name="info" size={13} color="rgba(255,255,255,.55)" stroke={1.6} />
-          </span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, opacity: 0.7, fontWeight: 300 }}>
-            as of today <Icon name="chevron" size={12} color={PF.white} stroke={1.8} />
-          </span>
-        </div>
-
-        {/* Allocation tiles */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-            gap: 10,
-            marginTop: 12,
-          }}
-        >
-          {allocation.map((a) => (
-            <div key={a.id} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,.08)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flex: "0 0 auto",
-                  }}
-                >
-                  <Icon name={a.icon} size={14} color={accent} stroke={1.6} />
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1, minWidth: 0 }}>
-                  <span style={{ fontSize: 11, fontWeight: 300, opacity: 0.75 }}>{a.label}</span>
-                  <span style={{ fontSize: 16, fontWeight: 700, marginTop: 2 }}>{a.pct}%</span>
-                </div>
+            {/* Page 1 — balance, performance, actions */}
+            <div style={{ width: "50%", flex: "0 0 50%", paddingRight: 4 }}>
+              <div
+                style={{
+                  fontSize: 30,
+                  fontWeight: 700,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.05,
+                }}
+              >
+                CHF 595&apos;389.49
               </div>
               <div
                 style={{
-                  height: 4,
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,.10)",
-                  overflow: "hidden",
+                  marginTop: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 6,
+                  fontSize: 12,
+                  fontWeight: 700,
                 }}
               >
-                <div
+                <span style={{ color: accent }}>+CHF 12&apos;430</span>
+                <span style={{ fontWeight: 300, opacity: 0.8 }}>this month</span>
+                <span style={{ color: accent, marginLeft: 2 }}>▲ 2.14%</span>
+              </div>
+
+              <button
+                style={{
+                  marginTop: 24,
+                  width: "100%",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  background: PF.gelb,
+                  color: PF.petrol11,
+                  border: "none",
+                  borderRadius: 999,
+                  padding: "12px 16px",
+                  fontFamily: pfFont,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: "pointer",
+                }}
+              >
+                <Icon name="trending-up" size={16} color={PF.petrol11} stroke={1.8} />
+                Discover opportunities
+              </button>
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <button
                   style={{
-                    width: `${a.pct}%`,
-                    height: "100%",
-                    background: accent,
+                    flex: 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "transparent",
+                    color: PF.white,
+                    border: "1px solid rgba(255,255,255,.24)",
                     borderRadius: 999,
+                    padding: "11px 14px",
+                    fontFamily: pfFont,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: "pointer",
                   }}
-                />
+                >
+                  Market
+                </button>
+                <button
+                  style={{
+                    flex: 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "transparent",
+                    color: PF.white,
+                    border: "1px solid rgba(255,255,255,.24)",
+                    borderRadius: 999,
+                    padding: "11px 14px",
+                    fontFamily: pfFont,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: "pointer",
+                  }}
+                >
+                  Advisor
+                </button>
               </div>
             </div>
-          ))}
+
+            {/* Page 2 — allocation */}
+            <div style={{ width: "50%", flex: "0 0 50%", paddingLeft: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>Portfolio allocation</span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 300,
+                    opacity: 0.7,
+                  }}
+                >
+                  as of today
+                </span>
+              </div>
+
+              <div
+                style={{
+                  marginTop: 14,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                }}
+              >
+                {allocation.map((a) => (
+                  <div
+                    key={a.id}
+                    style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 999,
+                            background: "rgba(255,255,255,.08)",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Icon name={a.icon} size={12} color={accent} stroke={1.6} />
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {a.label}
+                        </span>
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {a.pct}%
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        height: 4,
+                        borderRadius: 999,
+                        background: "rgba(255,255,255,.10)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${a.pct}%`,
+                          height: "100%",
+                          background: accent,
+                          borderRadius: 999,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                style={{
+                  marginTop: 16,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  background: "transparent",
+                  border: "none",
+                  color: PF.white,
+                  fontFamily: pfFont,
+                  fontWeight: 700,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  padding: 0,
+                  opacity: 0.85,
+                }}
+              >
+                Details <Icon name="chevron" size={12} color={PF.white} stroke={1.8} />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* CTAs */}
-        <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
-          <button
-            style={{
-              flex: "1 1 0",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              background: PF.gelb,
-              color: PF.petrol11,
-              border: "none",
-              borderRadius: 999,
-              padding: "11px 14px",
-              fontFamily: pfFont,
-              fontWeight: 700,
-              fontSize: 12,
-              cursor: "pointer",
-              minWidth: 0,
-            }}
-          >
-            <Icon name="trending-up" size={14} color={PF.petrol11} stroke={1.8} />
-            <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              Discover opportunities
-            </span>
-          </button>
-          <button
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              background: "transparent",
-              color: PF.white,
-              border: "1px solid rgba(255,255,255,.22)",
-              borderRadius: 999,
-              padding: "11px 14px",
-              fontFamily: pfFont,
-              fontWeight: 700,
-              fontSize: 12,
-              cursor: "pointer",
-            }}
-          >
-            <Icon name="bars" size={14} color={PF.white} stroke={1.8} /> Market
-          </button>
-          <button
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              background: "transparent",
-              color: PF.white,
-              border: "1px solid rgba(255,255,255,.22)",
-              borderRadius: 999,
-              padding: "11px 14px",
-              fontFamily: pfFont,
-              fontWeight: 700,
-              fontSize: 12,
-              cursor: "pointer",
-            }}
-          >
-            <Icon name="user" size={14} color={PF.white} stroke={1.8} /> Advisor
-          </button>
+        {/* Pagination dots */}
+        <div
+          style={{
+            marginTop: 14,
+            display: "flex",
+            justifyContent: "center",
+            gap: 6,
+          }}
+        >
+          {[0, 1].map((i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i)}
+              aria-label={`Page ${i + 1}`}
+              style={{
+                width: page === i ? 18 : 6,
+                height: 6,
+                borderRadius: 999,
+                border: "none",
+                padding: 0,
+                background:
+                  page === i ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.30)",
+                cursor: "pointer",
+                transition: `width 280ms ${spring}, background 200ms ease`,
+              }}
+            />
+          ))}
         </div>
       </div>
 
-      <div style={{ height: 16 }} />
+      {/* Backdrop when tray expanded */}
+      <div
+        onClick={() => setTrayExpanded(false)}
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(0,43,51,0.32)",
+          opacity: trayExpanded ? 1 : 0,
+          pointerEvents: trayExpanded ? "auto" : "none",
+          transition: "opacity 320ms ease",
+          zIndex: 1,
+        }}
+      />
 
-      {/* Portfolio cards */}
+      {/* Holdings tray */}
       <div
         style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: trayFullHeight,
+          transform: trayExpanded ? "translateY(0)" : `translateY(${trayHidden}px)`,
+          transition: `transform 460ms ${spring}`,
+          background: PF.white,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          boxShadow: "0 -10px 40px rgba(0, 75, 90, 0.10)",
           display: "flex",
           flexDirection: "column",
-          gap: 14,
-          padding: "0 16px",
+          zIndex: 2,
         }}
       >
-        {portfolios.map((p, pi) => (
-          <div
-            key={pi}
+        {/* Drag handle */}
+        <div
+          onClick={() => setTrayExpanded((v) => !v)}
+          style={{
+            paddingTop: 8,
+            paddingBottom: 6,
+            display: "flex",
+            justifyContent: "center",
+            cursor: "pointer",
+            flex: "0 0 auto",
+          }}
+        >
+          <span
             style={{
-              background: PF.white,
-              borderRadius: 20,
-              padding: 18,
-              boxShadow: "0 1px 0 rgba(0, 75, 90, 0.06)",
+              width: 36,
+              height: 4,
+              borderRadius: 999,
+              background: PF.divider,
+            }}
+          />
+        </div>
+
+        {/* Tray header */}
+        <div
+          style={{
+            padding: "4px 20px 12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flex: "0 0 auto",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+              color: PF.fg1,
             }}
           >
-            {/* Section header */}
+            Holdings
+          </span>
+          <button
+            onClick={() => setTrayExpanded((v) => !v)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              background: "transparent",
+              border: "none",
+              color: PF.petrol9,
+              fontFamily: pfFont,
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            {trayExpanded ? (
+              "Done"
+            ) : (
+              <>
+                View all <Icon name="chevron" size={14} color={PF.petrol9} stroke={1.8} />
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Tray scrollable list */}
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            padding: "0 16px",
+            paddingBottom: 24,
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          {portfolios.map((p, pi) => (
+            <div
+              key={pi}
+              style={{
+                borderTop: pi === 0 ? "none" : `1px solid ${PF.divider}`,
+              }}
+            >
+              {/* Summary row */}
+              <div
+                onClick={() => setTrayExpanded(true)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "14px 4px",
+                  cursor: "pointer",
+                }}
+              >
+                <SectionIcon kind={p.sectionIcon} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: PF.fg1,
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {p.title}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 300,
+                      color: PF.fg3,
+                      marginTop: 2,
+                    }}
+                  >
+                    {p.count}
+                  </div>
+                </div>
+                <div style={{ textAlign: "right", flex: "0 0 auto", marginRight: 4 }}>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: PF.fg1,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    CHF {p.total}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: PF.green,
+                      marginTop: 2,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 3,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    <span style={{ fontSize: 9 }}>▲</span> {p.ytdPct} YTD
+                  </div>
+                </div>
+                <Icon name="chevron" size={14} color={PF.fg4} stroke={1.8} />
+              </div>
+
+              {/* Detailed items (only when expanded) */}
+              {trayExpanded && (
+                <div style={{ paddingLeft: 56, paddingRight: 4, paddingBottom: 6 }}>
+                  {p.items.map((it, ii) => (
+                    <div
+                      key={ii}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "10px 0",
+                        borderTop: `1px solid ${PF.divider}`,
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: PF.fg1,
+                            lineHeight: 1.25,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {it.name}
+                        </div>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            marginTop: 4,
+                            padding: "2px 8px",
+                            borderRadius: 999,
+                            background: PF.petrol1,
+                            color: PF.petrol9,
+                            fontSize: 10,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {it.pillDot && (
+                            <span
+                              style={{
+                                width: 5,
+                                height: 5,
+                                borderRadius: 999,
+                                background: PF.green,
+                                display: "inline-block",
+                              }}
+                            />
+                          )}
+                          {it.pillLabel}
+                        </span>
+                      </div>
+                      <div style={{ textAlign: "right", flex: "0 0 auto" }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: PF.fg1,
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          CHF {it.amount}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: PF.green,
+                            marginTop: 1,
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          ▲ {it.changePct}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {trayExpanded && (
             <div
               style={{
+                marginTop: 14,
+                padding: "12px 14px",
+                borderRadius: 14,
+                background: PF.petrol1,
                 display: "flex",
                 alignItems: "center",
                 gap: 12,
               }}
             >
-              <SectionIcon kind={p.sectionIcon} />
+              <Icon name="shield" size={18} color={PF.petrol9} stroke={1.8} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
-                    fontSize: 16,
+                    fontSize: 12,
                     fontWeight: 700,
                     color: PF.fg1,
-                    letterSpacing: "-0.01em",
-                    lineHeight: 1.2,
+                    lineHeight: 1.25,
                   }}
                 >
-                  {p.title}
+                  Your assets are protected
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 300, color: PF.fg3, marginTop: 2 }}>
-                  {p.count}
-                </div>
-              </div>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: PF.petrol9,
-                  cursor: "pointer",
-                  flex: "0 0 auto",
-                }}
-              >
-                View all <Icon name="chevron" size={14} color={PF.petrol9} stroke={1.8} />
-              </span>
-            </div>
-
-            {/* Total + YTD */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "stretch",
-                gap: 16,
-                marginTop: 14,
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
-                    fontSize: 20,
-                    fontWeight: 700,
-                    color: PF.fg1,
-                    letterSpacing: "-0.01em",
-                    fontVariantNumeric: "tabular-nums",
+                    fontSize: 10,
+                    fontWeight: 300,
+                    color: PF.fg3,
+                    marginTop: 1,
                   }}
                 >
-                  CHF {p.total}
-                </div>
-                <div style={{ fontSize: 11, fontWeight: 300, color: PF.fg3, marginTop: 2 }}>
-                  Total value
+                  Bank-level security &amp; Swiss regulation
                 </div>
               </div>
-              <div style={{ width: 1, background: PF.divider }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: PF.green,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  <span style={{ fontSize: 11 }}>▲</span> {p.ytdPct}
-                </div>
-                <div style={{ fontSize: 11, fontWeight: 300, color: PF.fg3, marginTop: 2 }}>
-                  YTD
-                </div>
-              </div>
+              <Icon name="chevron" size={12} color={PF.petrol9} stroke={1.8} />
             </div>
-
-            {/* Items */}
-            <div style={{ marginTop: 14 }}>
-              {p.items.map((it, ii) => (
-                <div
-                  key={ii}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "12px 0",
-                    borderTop: `1px solid ${PF.divider}`,
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: PF.fg1,
-                        lineHeight: 1.25,
-                      }}
-                    >
-                      {it.name}
-                    </div>
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                        marginTop: 6,
-                        padding: "3px 9px 3px 8px",
-                        borderRadius: 999,
-                        background: PF.petrol1,
-                        color: PF.petrol9,
-                        fontSize: 11,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {it.pillDot && (
-                        <span
-                          style={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: 999,
-                            background: PF.green,
-                            display: "inline-block",
-                          }}
-                        />
-                      )}
-                      {it.pillIcon && (
-                        <Icon name={it.pillIcon} size={11} color={PF.petrol9} stroke={1.6} />
-                      )}
-                      {it.pillLabel}
-                    </span>
-                  </div>
-                  <div style={{ textAlign: "right", flex: "0 0 auto" }}>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: PF.fg1,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      CHF {it.amount}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: PF.green,
-                        marginTop: 2,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 3,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      <span style={{ fontSize: 9 }}>▲</span> {it.changePct} YTD
-                    </div>
-                  </div>
-                  <Icon name="chevron" size={14} color={PF.fg4} stroke={1.8} />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-
-        {/* Trust card */}
-        <div
-          style={{
-            background: PF.white,
-            borderRadius: 20,
-            padding: "14px 16px",
-            boxShadow: "0 1px 0 rgba(0, 75, 90, 0.06)",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 12,
-              background: PF.petrol1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flex: "0 0 auto",
-            }}
-          >
-            <Icon name="shield" size={18} color={PF.petrol9} stroke={1.8} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: PF.fg1, lineHeight: 1.25 }}>
-              Your assets are protected
-            </div>
-            <div style={{ fontSize: 11, fontWeight: 300, color: PF.fg3, marginTop: 2 }}>
-              Bank-level security &amp; Swiss regulation
-            </div>
-          </div>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: 12,
-              fontWeight: 700,
-              color: PF.petrol9,
-              flex: "0 0 auto",
-            }}
-          >
-            Learn more <Icon name="chevron" size={12} color={PF.petrol9} stroke={1.8} />
-          </span>
+          )}
         </div>
       </div>
-
-      <div style={{ height: 20 }} />
-    </PFScreen>
+    </div>
   );
 }
 
