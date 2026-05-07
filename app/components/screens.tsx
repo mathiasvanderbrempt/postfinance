@@ -223,7 +223,6 @@ export function ScreenPay() {
 }
 
 /* ─── INVEST ──────────────────────────────────────────────────────── */
-type InvestTab = { id: string; icon: string; label: string; accent?: boolean };
 type Holding = { name: string; tag: string; amount: string; change: string };
 type Portfolio = {
   title: string;
@@ -233,11 +232,12 @@ type Portfolio = {
 };
 
 export function ScreenInvest() {
-  const tabs: InvestTab[] = [
-    { id: "discover", icon: "trending-up", label: "Discover", accent: true },
-    { id: "market", icon: "tag", label: "Market overview" },
-    { id: "consult", icon: "card", label: "Consultation" },
+  const allocation = [
+    { id: "funds", icon: "pie", label: "Funds", pct: 58 },
+    { id: "ret", icon: "chair", label: "Retirement", pct: 27 },
+    { id: "cash", icon: "wallet", label: "Cash", pct: 15 },
   ];
+  const accent = "#5EE6B6";
   const portfolios: Portfolio[] = [
     {
       title: "Fund self-service",
@@ -300,7 +300,7 @@ export function ScreenInvest() {
   return (
     <PFScreen bg={PF.bgAlt}>
       <div style={{ height: 12 }} />
-      {/* HERO — petrol card with shine, search button, balance, 3 tabs */}
+      {/* HERO — investment & retirement total + allocation */}
       <div
         className="pf-petrol-card"
         style={{
@@ -308,86 +308,270 @@ export function ScreenInvest() {
           background: PF.petrol9,
           color: PF.white,
           borderRadius: 24,
-          padding: "20px 22px 24px",
+          padding: 20,
           boxShadow: "0 8px 20px rgba(0,75,90,0.10)",
           position: "relative",
           overflow: "hidden",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        {/* Decorative trend sparkline */}
+        <svg
+          aria-hidden
+          viewBox="0 0 200 90"
+          preserveAspectRatio="none"
+          style={{
+            position: "absolute",
+            top: 56,
+            right: 0,
+            width: "62%",
+            height: 90,
+            opacity: 0.55,
+            pointerEvents: "none",
+          }}
+        >
+          <path
+            d="M0 70 L25 60 L45 65 L70 50 L95 55 L120 35 L145 40 L170 22 L195 8"
+            fill="none"
+            stroke={accent}
+            strokeWidth={1.6}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx={195} cy={8} r={3.2} fill={accent} />
+          <circle cx={195} cy={8} r={7} fill={accent} opacity={0.25} />
+        </svg>
+
+        {/* Top row: title + Total pill */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+            position: "relative",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 999,
+                background: "rgba(255,255,255,.10)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: "0 0 auto",
+              }}
+            >
+              <Icon name="trending-up" size={16} color={PF.white} stroke={1.8} />
+            </div>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "-0.005em",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              Investment &amp; Retirement
+            </span>
+          </div>
           <button
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 6,
-              background: "rgba(255,255,255,.12)",
-              border: "none",
+              gap: 4,
+              background: "transparent",
+              border: "1px solid rgba(255,255,255,.20)",
               borderRadius: 999,
               color: PF.white,
-              padding: "8px 14px",
+              padding: "6px 10px 6px 12px",
               fontFamily: pfFont,
               fontWeight: 700,
-              fontSize: 13,
+              fontSize: 12,
               cursor: "pointer",
+              flex: "0 0 auto",
             }}
           >
-            <Icon name="search" size={16} color={PF.white} /> Search
+            Total <Icon name="chevron-down" size={14} color={PF.white} stroke={1.8} />
           </button>
         </div>
-        <div style={{ textAlign: "center", marginTop: 8 }}>
-          <div style={{ fontSize: 14, fontWeight: 300, opacity: 0.85 }}>
-            Investment and Retirement
-          </div>
+
+        {/* Balance */}
+        <div style={{ position: "relative", marginTop: 18 }}>
           <div
             style={{
               fontSize: 30,
               fontWeight: 700,
-              letterSpacing: "-0.01em",
-              marginTop: 4,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.05,
             }}
           >
-            CHF 595&apos;389.49+
+            CHF 595&apos;389.49
+          </div>
+          <div
+            style={{
+              marginTop: 8,
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 6,
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            <span style={{ color: accent }}>+CHF 12&apos;430</span>
+            <span style={{ fontWeight: 300, opacity: 0.8 }}>this month</span>
+            <span style={{ color: accent, marginLeft: 2 }}>▲ 2.14%</span>
           </div>
         </div>
+
+        {/* Divider */}
+        <div
+          style={{
+            height: 1,
+            background: "rgba(255,255,255,.12)",
+            margin: "18px 0 14px",
+          }}
+        />
+
+        {/* Allocation header */}
         <div
           style={{
             display: "flex",
-            justifyContent: "space-around",
-            marginTop: 22,
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontSize: 12,
           }}
         >
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 8,
-                padding: 0,
-                fontFamily: pfFont,
-                color: PF.white,
-              }}
-            >
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
+            Portfolio allocation
+            <Icon name="info" size={13} color="rgba(255,255,255,.55)" stroke={1.6} />
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, opacity: 0.7, fontWeight: 300 }}>
+            as of today <Icon name="chevron" size={12} color={PF.white} stroke={1.8} />
+          </span>
+        </div>
+
+        {/* Allocation tiles */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            gap: 10,
+            marginTop: 12,
+          }}
+        >
+          {allocation.map((a) => (
+            <div key={a.id} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 999,
+                    background: "rgba(255,255,255,.08)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flex: "0 0 auto",
+                  }}
+                >
+                  <Icon name={a.icon} size={14} color={accent} stroke={1.6} />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1, minWidth: 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 300, opacity: 0.75 }}>{a.label}</span>
+                  <span style={{ fontSize: 16, fontWeight: 700, marginTop: 2 }}>{a.pct}%</span>
+                </div>
+              </div>
               <div
                 style={{
-                  width: 56,
-                  height: 56,
+                  height: 4,
                   borderRadius: 999,
-                  background: t.accent ? PF.gelb : PF.petrol1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  background: "rgba(255,255,255,.10)",
+                  overflow: "hidden",
                 }}
               >
-                <Icon name={t.icon} size={24} color={PF.petrol9} stroke={1.8} />
+                <div
+                  style={{
+                    width: `${a.pct}%`,
+                    height: "100%",
+                    background: accent,
+                    borderRadius: 999,
+                  }}
+                />
               </div>
-              <span style={{ fontSize: 12, fontWeight: 700 }}>{t.label}</span>
-            </button>
+            </div>
           ))}
+        </div>
+
+        {/* CTAs */}
+        <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
+          <button
+            style={{
+              flex: "1 1 0",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              background: PF.gelb,
+              color: PF.petrol11,
+              border: "none",
+              borderRadius: 999,
+              padding: "11px 14px",
+              fontFamily: pfFont,
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: "pointer",
+              minWidth: 0,
+            }}
+          >
+            <Icon name="trending-up" size={14} color={PF.petrol11} stroke={1.8} />
+            <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              Discover opportunities
+            </span>
+          </button>
+          <button
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              background: "transparent",
+              color: PF.white,
+              border: "1px solid rgba(255,255,255,.22)",
+              borderRadius: 999,
+              padding: "11px 14px",
+              fontFamily: pfFont,
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: "pointer",
+            }}
+          >
+            <Icon name="bars" size={14} color={PF.white} stroke={1.8} /> Market
+          </button>
+          <button
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              background: "transparent",
+              color: PF.white,
+              border: "1px solid rgba(255,255,255,.22)",
+              borderRadius: 999,
+              padding: "11px 14px",
+              fontFamily: pfFont,
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: "pointer",
+            }}
+          >
+            <Icon name="user" size={14} color={PF.white} stroke={1.8} /> Advisor
+          </button>
         </div>
       </div>
 

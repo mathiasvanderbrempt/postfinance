@@ -46,6 +46,14 @@ const paths: Record<string, string> = {
   logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9",
   pie:
     "M21 15a9 9 0 1 1-12-8.45 M22 12A10 10 0 0 0 12 2v10z",
+  info:
+    "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 16v-4 M12 8h.01",
+  chair:
+    "M5 10V6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v4 M3 14a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v3H3z M6 17v4 M18 17v4",
+  wallet:
+    "M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M16 12h3 M3 10h18",
+  bars:
+    "M4 20V10 M10 20V4 M16 20V14 M22 20V8",
 };
 
 export type IconName = keyof typeof paths;
