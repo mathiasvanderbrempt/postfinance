@@ -335,50 +335,7 @@ function SectionIcon({ kind }: { kind: SectionIconKind }) {
 }
 
 export function ScreenInvest() {
-  const allocation = [
-    { id: "funds", icon: "pie", label: "Funds", pct: 58 },
-    { id: "ret", icon: "chair", label: "Retirement", pct: 27 },
-    { id: "cash", icon: "wallet", label: "Cash", pct: 15 },
-  ];
   const accent = "#5EE6B6";
-
-  // Hero swipe state
-  const [page, setPage] = React.useState(0);
-  const [dragX, setDragX] = React.useState(0);
-  const [dragging, setDragging] = React.useState(false);
-  const startX = React.useRef(0);
-  const trackRef = React.useRef<HTMLDivElement>(null);
-
-  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    if ((e.target as HTMLElement).closest("button, a")) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    setDragging(true);
-    startX.current = e.clientX;
-    setDragX(0);
-  }
-  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (!dragging) return;
-    const dx = e.clientX - startX.current;
-    // Resist out-of-range drag
-    const w = trackRef.current?.clientWidth ?? 1;
-    let resisted = dx;
-    if ((page === 0 && dx > 0) || (page === 1 && dx < 0)) {
-      resisted = dx * 0.35;
-    }
-    void w;
-    setDragX(resisted);
-  }
-  function onPointerUp() {
-    if (!dragging) return;
-    setDragging(false);
-    const w = trackRef.current?.clientWidth ?? 1;
-    const threshold = w * 0.2;
-    let next = page;
-    if (dragX < -threshold) next = Math.min(1, page + 1);
-    else if (dragX > threshold) next = Math.max(0, page - 1);
-    setPage(next);
-    setDragX(0);
-  }
 
   // Holdings tray state — null = closed, index of active portfolio when open
   const [activeSection, setActiveSection] = React.useState<number | null>(null);
@@ -479,7 +436,7 @@ export function ScreenInvest() {
         }}
       >
       <div style={{ height: 12 }} />
-      {/* HERO — investment & retirement total + allocation (swipeable) */}
+      {/* HERO — investment & retirement total + actions */}
       <div
         className="pf-petrol-card"
         style={{
@@ -487,7 +444,7 @@ export function ScreenInvest() {
           background: PF.petrol9,
           color: PF.white,
           borderRadius: 24,
-          padding: "20px 20px 16px",
+          padding: "14px 16px 14px",
           boxShadow: "0 8px 20px rgba(0,75,90,0.10)",
           position: "relative",
           overflow: "hidden",
@@ -501,14 +458,13 @@ export function ScreenInvest() {
             alignItems: "center",
             justifyContent: "space-between",
             gap: 8,
-            position: "relative",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
             <div
               style={{
-                width: 32,
-                height: 32,
+                width: 26,
+                height: 26,
                 borderRadius: 999,
                 background: "rgba(255,255,255,.10)",
                 display: "flex",
@@ -517,7 +473,7 @@ export function ScreenInvest() {
                 flex: "0 0 auto",
               }}
             >
-              <Icon name="trending-up" size={16} color={PF.white} stroke={1.8} />
+              <Icon name="trending-up" size={14} color={PF.white} stroke={1.8} />
             </div>
             <span
               style={{
@@ -541,277 +497,110 @@ export function ScreenInvest() {
               border: "1px solid rgba(255,255,255,.20)",
               borderRadius: 999,
               color: PF.white,
-              padding: "6px 10px 6px 12px",
+              padding: "5px 8px 5px 10px",
               fontFamily: pfFont,
               fontWeight: 700,
-              fontSize: 12,
+              fontSize: 11,
               cursor: "pointer",
               flex: "0 0 auto",
             }}
           >
-            Total <Icon name="chevron-down" size={14} color={PF.white} stroke={1.8} />
+            Total <Icon name="chevron-down" size={12} color={PF.white} stroke={1.8} />
           </button>
         </div>
 
-        {/* Swipe track */}
+        {/* Balance */}
         <div
-          ref={trackRef}
           style={{
-            overflow: "hidden",
-            marginTop: 16,
-            touchAction: "pan-y",
+            marginTop: 10,
+            fontSize: 28,
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+            lineHeight: 1.05,
           }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
         >
-          <div
-            style={{
-              display: "flex",
-              width: "200%",
-              transform: `translateX(calc(${-page * 50}% + ${dragX}px))`,
-              transition: dragging ? "none" : `transform 420ms ${spring}`,
-              minHeight: 190,
-            }}
-          >
-            {/* Page 1 — balance, performance, actions */}
-            <div style={{ width: "50%", flex: "0 0 50%", paddingRight: 4 }}>
-              <div
-                style={{
-                  fontSize: 30,
-                  fontWeight: 700,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.05,
-                }}
-              >
-                CHF 595&apos;389.49
-              </div>
-              <div
-                style={{
-                  marginTop: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: 6,
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
-              >
-                <span style={{ color: accent }}>+CHF 12&apos;430</span>
-                <span style={{ fontWeight: 300, opacity: 0.8 }}>this month</span>
-                <span style={{ color: accent, marginLeft: 2 }}>▲ 2.14%</span>
-              </div>
-
-              <button
-                style={{
-                  marginTop: 16,
-                  width: "100%",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  background: PF.gelb,
-                  color: PF.petrol11,
-                  border: "none",
-                  borderRadius: 999,
-                  padding: "12px 16px",
-                  fontFamily: pfFont,
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: "pointer",
-                }}
-              >
-                <Icon name="trending-up" size={16} color={PF.petrol11} stroke={1.8} />
-                Discover opportunities
-              </button>
-              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                <button
-                  style={{
-                    flex: 1,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "transparent",
-                    color: PF.white,
-                    border: "1px solid rgba(255,255,255,.24)",
-                    borderRadius: 999,
-                    padding: "11px 14px",
-                    fontFamily: pfFont,
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: "pointer",
-                  }}
-                >
-                  Market
-                </button>
-                <button
-                  style={{
-                    flex: 1,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "transparent",
-                    color: PF.white,
-                    border: "1px solid rgba(255,255,255,.24)",
-                    borderRadius: 999,
-                    padding: "11px 14px",
-                    fontFamily: pfFont,
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: "pointer",
-                  }}
-                >
-                  Advisor
-                </button>
-              </div>
-            </div>
-
-            {/* Page 2 — allocation */}
-            <div style={{ width: "50%", flex: "0 0 50%", paddingLeft: 4 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 13, fontWeight: 700 }}>Portfolio allocation</span>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 300,
-                    opacity: 0.7,
-                  }}
-                >
-                  as of today
-                </span>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 14,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 12,
-                }}
-              >
-                {allocation.map((a) => (
-                  <div
-                    key={a.id}
-                    style={{ display: "flex", flexDirection: "column", gap: 6 }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 8,
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: 999,
-                            background: "rgba(255,255,255,.08)",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Icon name={a.icon} size={12} color={accent} stroke={1.6} />
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {a.label}
-                        </span>
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 700,
-                          fontVariantNumeric: "tabular-nums",
-                        }}
-                      >
-                        {a.pct}%
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        height: 4,
-                        borderRadius: 999,
-                        background: "rgba(255,255,255,.10)",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${a.pct}%`,
-                          height: "100%",
-                          background: accent,
-                          borderRadius: 999,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                style={{
-                  marginTop: 16,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  background: "transparent",
-                  border: "none",
-                  color: PF.white,
-                  fontFamily: pfFont,
-                  fontWeight: 700,
-                  fontSize: 12,
-                  cursor: "pointer",
-                  padding: 0,
-                  opacity: 0.85,
-                }}
-              >
-                Details <Icon name="chevron" size={12} color={PF.white} stroke={1.8} />
-              </button>
-            </div>
-          </div>
+          CHF 595&apos;389.49
+        </div>
+        <div
+          style={{
+            marginTop: 4,
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 6,
+            fontSize: 12,
+            fontWeight: 700,
+          }}
+        >
+          <span style={{ color: accent }}>+CHF 12&apos;430</span>
+          <span style={{ fontWeight: 300, opacity: 0.8 }}>this month</span>
+          <span style={{ color: accent, marginLeft: 2 }}>▲ 2.14%</span>
         </div>
 
-        {/* Pagination dots */}
-        <div
-          style={{
-            marginTop: 14,
-            display: "flex",
-            justifyContent: "center",
-            gap: 6,
-          }}
-        >
-          {[0, 1].map((i) => (
-            <button
-              key={i}
-              onClick={() => setPage(i)}
-              aria-label={`Page ${i + 1}`}
-              style={{
-                width: page === i ? 18 : 6,
-                height: 6,
-                borderRadius: 999,
-                border: "none",
-                padding: 0,
-                background:
-                  page === i ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.30)",
-                cursor: "pointer",
-                transition: `width 280ms ${spring}, background 200ms ease`,
-              }}
-            />
-          ))}
+        {/* Action row — 3 buttons */}
+        <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
+          <button
+            style={{
+              flex: 1,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 5,
+              background: PF.gelb,
+              color: PF.petrol11,
+              border: "none",
+              borderRadius: 999,
+              padding: "10px 8px",
+              fontFamily: pfFont,
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: "pointer",
+              minWidth: 0,
+            }}
+          >
+            <Icon name="trending-up" size={14} color={PF.petrol11} stroke={1.8} />
+            Discover
+          </button>
+          <button
+            style={{
+              flex: 1,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "transparent",
+              color: PF.white,
+              border: "1px solid rgba(255,255,255,.24)",
+              borderRadius: 999,
+              padding: "10px 8px",
+              fontFamily: pfFont,
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: "pointer",
+              minWidth: 0,
+            }}
+          >
+            Market
+          </button>
+          <button
+            style={{
+              flex: 1,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "transparent",
+              color: PF.white,
+              border: "1px solid rgba(255,255,255,.24)",
+              borderRadius: 999,
+              padding: "10px 8px",
+              fontFamily: pfFont,
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: "pointer",
+              minWidth: 0,
+            }}
+          >
+            Advisor
+          </button>
         </div>
       </div>
 
