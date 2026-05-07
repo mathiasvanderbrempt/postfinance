@@ -465,33 +465,6 @@ export function ScreenInvest() {
           overflow: "hidden",
         }}
       >
-        {/* Decorative trend sparkline */}
-        <svg
-          aria-hidden
-          viewBox="0 0 200 90"
-          preserveAspectRatio="none"
-          style={{
-            position: "absolute",
-            top: 56,
-            right: 0,
-            width: "62%",
-            height: 90,
-            opacity: 0.55,
-            pointerEvents: "none",
-          }}
-        >
-          <path
-            d="M0 70 L25 60 L45 65 L70 50 L95 55 L120 35 L145 40 L170 22 L195 8"
-            fill="none"
-            stroke={accent}
-            strokeWidth={1.6}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <circle cx={195} cy={8} r={3.2} fill={accent} />
-          <circle cx={195} cy={8} r={7} fill={accent} opacity={0.25} />
-        </svg>
-
         {/* Top row: title + Total pill */}
         <div
           style={{
