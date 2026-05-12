@@ -407,7 +407,7 @@ export function ScreenInvest() {
           background: PF.petrol9,
           color: PF.white,
           borderRadius: 24,
-          padding: "14px 16px 14px",
+          padding: "18px 16px 18px",
           boxShadow: "0 8px 20px rgba(0,75,90,0.10)",
           position: "relative",
           overflow: "hidden",
@@ -475,7 +475,7 @@ export function ScreenInvest() {
         {/* Balance */}
         <div
           style={{
-            marginTop: 10,
+            marginTop: 16,
             fontSize: 28,
             fontWeight: 700,
             letterSpacing: "-0.02em",
@@ -486,7 +486,7 @@ export function ScreenInvest() {
         </div>
         <div
           style={{
-            marginTop: 4,
+            marginTop: 6,
             display: "flex",
             alignItems: "center",
             flexWrap: "wrap",
@@ -501,7 +501,7 @@ export function ScreenInvest() {
         </div>
 
         {/* Action row — 3 buttons */}
-        <div style={{ display: "flex", gap: 6, marginTop: 18 }}>
+        <div style={{ display: "flex", gap: 6, marginTop: 22 }}>
           <button
             style={{
               flex: 1,
