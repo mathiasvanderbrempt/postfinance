@@ -72,7 +72,7 @@ export function PFHeader({
   return (
     <div
       style={{
-        padding: large ? "8px 16px 16px" : "10px 16px 12px",
+        padding: large ? "8px 16px 8px" : "10px 16px 12px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -164,14 +164,14 @@ export function PFAccountCard({
         background: PF.petrol9,
         color: PF.white,
         borderRadius: 20,
-        padding: "24px 22px 26px",
+        padding: "20px 22px 22px",
         margin: "0 20px",
-        minHeight: 180,
+        minHeight: 156,
         boxShadow: "0 8px 20px rgba(0,75,90,0.10)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        gap: 28,
+        gap: 20,
         position: "relative",
         overflow: "hidden",
       }}
